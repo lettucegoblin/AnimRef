@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html id='root'>
+<head>
+    <meta charset="UTF-8">
+    <title>Hello World!</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';" />
+    <style>
+        html{
+            border: #0c0c0c solid 1px;
+            transform-origin: 0 0;
+        }
+        html, body{
+            background: #202020;
+            background-color: transparent;
+            height: calc(100% - 2px);
+            margin: 0px;
+            padding: 0px;
+            
+        }
+        body{
+            transition: -webkit-transform 0.1s ease 0s; 
+            transform-origin: 0px 0px; 
+            transform: translate(0px, 0px) scale(1.0);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        #welcome{
+            font-family: sans-serif;
+            color: #7A7A7A;
+            text-align: center;
+            user-select: none;
+            width: 360px;
+            display: flex;
+            flex-direction: column;
+            height: 107px;
+            justify-content: flex-end;
+            position: absolute;
+        }
+        h1, p{
+            margin: 0;
+            
+        }
+        #welcome h1{
+            line-height: 1;
+            font-weight: normal;
+            font-size: x-large;
+            color: #888888;
+        }
+        #welcome p{
+            margin-top: 12px;
+        }
+        #itemHolder{
+            height: 100%;
+            width: 100%;
+        }
+        .selectedItem{
+            outline: 3px solid rgb(37 157 199);
+        }
+        .selectedItem.resizeItem{
+
+        }
+        img{
+            position: absolute;
+        }
+    </style>
+</head>
+
+<body>
+    <div id='welcome'>
+        <h1>There's nothing here!<br>
+            Drop some images to get started.
+        </h1>
+        <p >
+            (Ctrl+H for additional help)
+        </p>
+    </div>
+    <div id='itemHolder'></div>
+    
+</body>
+<script>
+    let currentScale = 1;
+
+    let translateX = 0
+    let translateY = 0
+
+    const factor = 0.1
+    document.documentElement.addEventListener("wheel", (e) => {
+        let delta = event.wheelDelta/120
+        
+        //const nextScale = currentScale + delta * factor
+        const nextScale = Math.max(currentScale + delta * (currentScale / 2), 0.01)//delta * -1 * (currentScale / 2.5)
+        console.log(delta, currentScale, nextScale)
+        zoom(nextScale, e)
+        //let change = -1 * currentScale / 2.5
+        //currentScale += normalizedDeltaY * change;
+        //currentScale = Math.max(0.01, currentScale)
+        //document.documentElement.style.transform = `scale(${currentScale})`;
+    })
+    const zoom = (nextScale, event) => {
+
+        const ratio = 1 - nextScale / currentScale
+
+        const {
+        clientX,
+        clientY
+        } = event
+
+        translateX += (clientX - translateX) * ratio
+        translateY += (clientY - translateY) * ratio
+
+        document.body.style.transform = `translate(${translateX}px, ${translateY}px) scale(${nextScale})`
+
+        currentScale = nextScale
+        myAPI.updateScale(nextScale)
+        myAPI.updateTranslate({translateX, translateY})
+    }
+</script>
+</html>
