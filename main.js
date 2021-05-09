@@ -9,16 +9,24 @@ const {
 const path = require('path')
 
 const menu = new Menu()
-menu.append(new MenuItem({ label: 'Hello' }))
-menu.append(new MenuItem({ type: 'separator' }))
-menu.append(new MenuItem({ label: 'Electron', type: 'checkbox', checked: true }))
+//menu.append(new MenuItem({ label: 'Hello 👋' }))
+//menu.append(new MenuItem({ type: 'separator' }))
+menu.append(new MenuItem({ 
+  label: 'Close',
+  click: (menuItem, browserWindow, event) => {
+    browserWindow.close()
+  }
+}))
+//menu.append(new MenuItem({ label: 'Electron', type: 'checkbox', checked: true }))
 
+let width = 400;
+let height = 300;
 
 function createWindow () {
   const win = new BrowserWindow({
     backgroundColor: "#202020",
-    width: 1395,
-    height: 1265,
+    width: width,
+    height: height,
     frame: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -32,7 +40,7 @@ function createWindow () {
 console.log('hey')
 app.whenReady().then(() => {
   const mainWin = createWindow()
-  mainWin.webContents.openDevTools()
+  //mainWin.webContents.openDevTools()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow()
@@ -50,9 +58,23 @@ app.whenReady().then(() => {
   let dragState = {
       dragging: false
   }
+ 
+  ipcMain.on('record-window-size', (event, w, h) => {
+    width = mainWin.getSize()[0]
+    height = mainWin.getSize()[1]
+  })
   ipcMain.on('move-electron-window', (event, x, y, initPos) => {
-    var display =  screen.getDisplayNearestPoint({x: x, y: y})
-    mainWin.setPosition(x - Math.round(initPos.x / 1.25), y - Math.round(initPos.y / 1.25))
+    //var display =  screen.getDisplayNearestPoint({x: x, y: y})
+    //var dpiRespected = screen.dipToScreenPoint({x: x, y: y})
+    //mainWin.setPosition(x,y)
+    mainWin.setBounds({
+        width: width,
+        height: height,
+        x: x - initPos.x,
+        y: y - initPos.y
+    });
+    //win.setSize(width, height)
+    //mainWin.setPosition(Math.round(x / 1.25) - Math.round(initPos.x / 1.25), Math.round(y / 1.25) - Math.round(initPos.y / 1.25))
   })
 })
 

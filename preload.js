@@ -27,6 +27,7 @@ let mouseObj = {
 }
 document.addEventListener('mousedown', (e) => {
     mouseObj.initPos = {x: e.clientX, y: e.clientY}
+    ipcRenderer.send('record-window-size', window.innerHeight, window.innerHeight)
 })
 document.addEventListener('mousemove', (e) => {
     if(e.buttons == 2){
@@ -34,6 +35,7 @@ document.addEventListener('mousemove', (e) => {
         mouseObj.lastUpdate = Date.now();
     }
 })
+
 
 document.addEventListener('drop', (event) => {
   event.preventDefault();

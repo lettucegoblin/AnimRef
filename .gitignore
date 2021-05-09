@@ -75,3 +75,6 @@ typings/
 # FuseBox cache
 .fusebox/
 .vscode/launch.json
+
+# electron forge output
+out/
