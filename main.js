@@ -8,15 +8,7 @@ const {
   } = require('electron')
 const path = require('path')
 
-const menu = new Menu()
-//menu.append(new MenuItem({ label: 'Hello 👋' }))
-//menu.append(new MenuItem({ type: 'separator' }))
-menu.append(new MenuItem({ 
-  label: 'Close',
-  click: (menuItem, browserWindow, event) => {
-    browserWindow.close()
-  }
-}))
+
 //menu.append(new MenuItem({ label: 'Electron', type: 'checkbox', checked: true }))
 
 let width = 400;
@@ -33,6 +25,7 @@ function createWindow () {
       nodeIntegration: true,
     }
   })
+  win.setAlwaysOnTop(true);
 
   win.loadFile('index.html')
   return win;
@@ -40,6 +33,21 @@ function createWindow () {
 console.log('hey')
 app.whenReady().then(() => {
   const mainWin = createWindow()
+
+  const menu = new Menu()
+  menu.append(new MenuItem({ label: 'Always on Top', type: 'checkbox', checked: true, 
+    click: (menuItem, browserWindow, event) => {
+      mainWin.setAlwaysOnTop(menuItem.checked);
+    } 
+  }))
+  menu.append(new MenuItem({ type: 'separator' }))
+  menu.append(new MenuItem({ 
+    label: 'Close',
+    click: (menuItem, browserWindow, event) => {
+      browserWindow.close()
+    }
+  }))
+
   //mainWin.webContents.openDevTools()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
