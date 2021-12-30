@@ -15,7 +15,14 @@ let state = {
 
   ]
 }
-
+document.addEventListener('keydown', evt => {
+  if (evt.key === 'c' && evt.ctrlKey) {
+      //alert('Ctrl+C was pressed');
+  } else if (evt.key === 'v' && evt.ctrlKey) {
+    ipcRenderer.send('handle-paste')
+    console.log('Ctrl+V was pressed');
+  }
+});
 
 document.addEventListener('contextmenu', () => {
   if(Date.now() - mouseObj.lastUpdate > 100)
@@ -36,34 +43,51 @@ document.addEventListener('mousemove', (e) => {
     }
 })
 
+ipcRenderer.on('clipboard', (event, msg) => {
+  let payload = JSON.parse(msg);
+  console.log(payload)
+  if(payload.type == 'filePath'){
+    addImageWithPath(payload.filePath)
+  }
+  if(payload.type == 'dataURL'){
+    addImageWithPath(payload[payload.type])
+    //URL.createObjectURL(object)
+  }
+})
+
+function addImageWithPath(path){
+  document.querySelector('#welcome') && document.querySelector('#welcome').remove()
+  let itemHolder = document.getElementById('itemHolder')
+  let newImg = document.createElement('img')
+  newImg.src = path;
+  newImg.classList.add('draggable')
+  zIndex = state.elements.length;
+  newImg.style.zIndex = zIndex
+  newImg.dataset.index = zIndex
+  state.elements.push({
+    path: path,
+    type: 'img',
+    element: newImg
+  })
+
+  itemHolder.appendChild(newImg)
+}
 
 document.addEventListener('drop', (event) => {
   event.preventDefault();
   event.stopPropagation();
   if(!state.init) init();
   // Todo check if file is valid
-  document.querySelector('#welcome') && document.querySelector('#welcome').remove()
-  let itemHolder = document.getElementById('itemHolder')
+  
+  
   for (const f of event.dataTransfer.files) {
       // Using the path attribute to get absolute file path
       console.log('File Path of dragged files: ', f.path)
-      let newImg = document.createElement('img')
-      newImg.src = f.path;
-      newImg.classList.add('draggable')
-      zIndex = state.elements.length;
-      newImg.style.zIndex = zIndex
-      newImg.dataset.index = zIndex
-      state.elements.push({
-        path: f.path,
-        type: 'img',
-        element: newImg
-      })
-
-      itemHolder.appendChild(newImg)
+      addImageWithPath(f.path)
     }
 });
 function init(){
-  document.documentElement.addEventListener('click', (event) =>{
+  document.documentElement.addEventListener('click', (event) => {
     var target = event.target
     if(target.id == 'root'){
       console.log('background click')
