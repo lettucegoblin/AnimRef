@@ -54,7 +54,27 @@ ipcRenderer.on('clipboard', (event, msg) => {
     //URL.createObjectURL(object)
   }
 })
+function addVideoWithPath(path){
+  var elementObj = {
+    path: path,
+    type: undefined,
+    element: undefined
+  }
+  let vidElement = document.createElement('video')
+  vidElement.autoplay = true;
+  vidElement.muted = true;
+  vidElement.classList.add('draggable')
+  let srcElement = document.createElement('source')
+  srcElement.src = path;
+  vidElement.appendChild(srcElement)
+  
+  elementObj.type = 'video'
+  elementObj.element = vidElement
 
+  state.elements.push(elementObj)
+
+  itemHolder.appendChild(elementObj.element)
+}
 function addImageWithPath(path){
   document.querySelector('#welcome') && document.querySelector('#welcome').remove()
   let itemHolder = document.getElementById('itemHolder')
@@ -83,7 +103,10 @@ document.addEventListener('drop', (event) => {
   for (const f of event.dataTransfer.files) {
       // Using the path attribute to get absolute file path
       console.log('File Path of dragged files: ', f.path)
-      addImageWithPath(f.path)
+      if(f.path.endsWith('.mp4')){
+        addVideoWithPath(f.path)
+      } else
+        addImageWithPath(f.path)
     }
 });
 function init(){
@@ -139,6 +162,7 @@ function toggleResize(enabled) {
         target.setAttribute('data-x', x)
         target.setAttribute('data-y', y)
         target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height)
+        forceRedraw()
       }
     },
     modifiers: [
@@ -212,4 +236,13 @@ function dragMoveListener (event) {
   // update the posiion attributes
   target.setAttribute('data-x', x)
   target.setAttribute('data-y', y)
+  forceRedraw()
+}
+
+function forceRedraw(){
+  if(document.body.parentElement.style.backgroundColor == ''){
+    document.body.parentElement.style.backgroundColor = '#04040400'
+  } else{
+    document.body.parentElement.style.backgroundColor = ''
+  }
 }
