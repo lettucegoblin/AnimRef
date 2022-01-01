@@ -6,9 +6,11 @@ const {
     app,
     clipboard,
     screen,
-    globalShortcut
+    globalShortcut,
+    dialog
   } = require('electron')
 const path = require('path')
+const fs = require('fs');
 
 //menu.append(new MenuItem({ label: 'Electron', type: 'checkbox', checked: true }))
 
@@ -86,7 +88,51 @@ app.whenReady().then(() => {
     } 
   }));
   
+  
   menu.append(new MenuItem({ type: 'separator' }))
+  menu.append(new MenuItem({ 
+    label: 'Load',
+    click: (menuItem, browserWindow, event) => {
+      dialog.showOpenDialog({ 
+        properties: ['openFile'], 
+        filters: [
+          { name: 'PurRef Gif Scene', extensions: ['purgif'] }
+        ] 
+       }).then(result => {
+        console.log(result.canceled)
+        console.log(result.filePaths)
+        if(!result.canceled){
+          fs.readFile(result.filePaths[0], (err, data) => {
+            if (err) throw err;
+            let newState = JSON.parse(data);
+            console.log(newState);
+            mainWin.webContents.send('load-scene', newState)
+          });
+        }
+      }).catch(err => {
+        console.log(err)
+      })
+    }
+  }));
+  menu.append(new MenuItem({ 
+    label: 'Save',
+    click: (menuItem, browserWindow, event) => {
+      dialog.showSaveDialog({ 
+        defaultPath: 'scene.purgif',
+        filters: [
+          { name: 'PurRef Gif Scene', extensions: ['purgif'] }
+        ] 
+      }).then(result => {
+        console.log(result.canceled)
+        console.log(result.filePath)
+        if(!result.canceled){
+          mainWin.webContents.send('save-scene', result.filePath)
+        }
+      }).catch(err => {
+        console.log(err)
+      })
+    }
+  }));
   menu.append(new MenuItem({ 
     label: 'Close',
     click: (menuItem, browserWindow, event) => {
@@ -110,6 +156,13 @@ app.whenReady().then(() => {
   ipcMain.on('show-context-menu', (event) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     menu.popup(win)
+  })
+  ipcMain.on('save-scene', (event, filePath, stateCopy) => {
+    console.log('save', filePath, stateCopy)
+    let data = JSON.stringify(stateCopy);
+    fs.writeFileSync(filePath, data);
+    //const win = BrowserWindow.fromWebContents(event.sender)
+    //menu.popup(win)
   })
   let dragState = {
       dragging: false

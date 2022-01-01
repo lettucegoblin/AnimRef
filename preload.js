@@ -15,8 +15,47 @@ let state = {
 
   ]
 }
+
+function loadState(loadedState){
+  // file stuff
+
+  if(!state.init)
+    init();
+  document.getElementById('itemHolder').innerHTML = ''
+/*
+  let loadedState = {
+    init: true,
+    currentScale: 0.5,
+    translate: {
+      translateX: 0,
+      translateY: 0
+    },
+    elements: [
+      {
+        path: "C:\\Users\\lettu\\Pictures\\qg8prrn82km71.jpg",
+        type: "img",
+        x: 0,
+        y: 0
+      }
+    ]
+  }*/
+  updateScaleAndTranslate(loadedState.currentScale, loadedState.translate)
+
+  state.elements = []
+  for(var i in loadedState.elements){
+    addImageWithPath(loadedState.elements[i].path, loadedState.elements[i].x, loadedState.elements[i].y, loadedState.elements[i].width, loadedState.elements[i].height)
+  }
+
+  toggleResize(false)
+  //addImageWithPath("C:\\Users\\lettu\\Pictures\\qg8prrn82km71.jpg", 0, 0)
+  //addImageWithPath("C:\\Users\\lettu\\Pictures\\qg8prrn82km71.jpg", 200, 50)
+  
+}
+
 document.addEventListener('keydown', evt => {
+  
   if (evt.key === 'c' && evt.ctrlKey) {
+    loadState()
       //alert('Ctrl+C was pressed');
   } else if (evt.key === 'v' && evt.ctrlKey) {
     ipcRenderer.send('handle-paste')
@@ -58,13 +97,24 @@ document.addEventListener('mouseup', (e) => {
                 +
                 Math.pow(e.screenY - mouseObj.initClientPos.y, 2) );
 
-    if(distance < 10){ 
+    if(distance < 4){ 
       mouseObj.dragToggle = false;
     }
 
   }
 })
-
+ipcRenderer.on('load-scene', (event, newState) =>{
+  loadState(newState)
+})
+ipcRenderer.on('save-scene', (event, filePath) =>{
+  var stateCopy = JSON.parse(JSON.stringify(state));
+  for(var i = 0; i < stateCopy.elements.length; i++){
+    //stateCopy.elements.push()
+    delete stateCopy.elements[i].element;
+  }
+  console.log(stateCopy)
+  ipcRenderer.send('save-scene', filePath, stateCopy)
+})
 ipcRenderer.on('clipboard', (event, msg) => {
   let payload = JSON.parse(msg);
   console.log(payload)
@@ -98,7 +148,7 @@ function addVideoWithPath(path){
 
   itemHolder.appendChild(elementObj.element)
 }
-function addImageWithPath(path){
+function addImageWithPath(path, x = 0, y = 0, width = -1, height = -1){
   document.querySelector('#welcome') && document.querySelector('#welcome').remove()
   let itemHolder = document.getElementById('itemHolder')
   let newImg = document.createElement('img')
@@ -106,14 +156,24 @@ function addImageWithPath(path){
   newImg.classList.add('draggable')
   zIndex = state.elements.length;
   newImg.style.zIndex = zIndex
-  newImg.dataset.index = zIndex
+  newImg.dataset.zIndex = zIndex
+  newImg.dataset.x = x
+  newImg.dataset.y = y
+  if(width != -1 && height != -1){
+    newImg.width = width
+    newImg.height = height
+  }
   state.elements.push({
     path: path,
     type: 'img',
-    element: newImg
+    element: newImg,
+    width: width,
+    height: height
   })
 
   itemHolder.appendChild(newImg)
+
+  setTransformForElement(zIndex)
 }
 
 document.addEventListener('drop', (event) => {
@@ -125,7 +185,7 @@ document.addEventListener('drop', (event) => {
   
   for (const f of event.dataTransfer.files) {
       // Using the path attribute to get absolute file path
-      console.log('File Path of dragged files: ', f.path)
+      console.log('File Path of dragged files: ', f.path, state)
       if(f.path.endsWith('.mp4')){
         addVideoWithPath(f.path)
       } else
@@ -147,13 +207,19 @@ document.addEventListener('dragover', (e) => {
   e.stopPropagation();
 });
 
+function updateScaleAndTranslate(newScale, newTranslate){
+  state.currentScale = newScale
+  state.translate = newTranslate
+  document.body.style.transform = `translate(${state.translate.translateX}px, ${state.translate.translateY}px) scale(${state.currentScale})`
+  document.body.dataset.currentScale = state.currentScale
+  document.body.dataset.translateX = state.translate.translateX
+  document.body.dataset.translateY = state.translate.translateY
+
+  //window.currentScale = state.currentScale;
+}
+
 contextBridge.exposeInMainWorld('myAPI', {
-  updateScale: (newScale) => {
-    state.currentScale = newScale
-  },
-  updateTranslate: (newTranslate) =>{
-    state.translate = newTranslate
-  },
+  updateScaleAndTranslate: updateScaleAndTranslate,
   toggleResize: (enabled) =>{
     toggleResize(enabled)
   }
@@ -172,6 +238,11 @@ function toggleResize(enabled) {
     listeners: [{
       move (event) {
         var target = event.target
+        //handleSelected(target, true)
+        setTransformForElement(target.dataset.zIndex, event.deltaRect.left, event.deltaRect.top, event.rect.width, event.rect.height)
+        forceRedraw()
+        /*
+        var target = event.target
         var x = (parseFloat(target.getAttribute('data-x')) || 0)
         var y = (parseFloat(target.getAttribute('data-y')) || 0)
 
@@ -189,6 +260,7 @@ function toggleResize(enabled) {
         target.setAttribute('data-y', y)
         target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height)
         forceRedraw()
+        */
       }
     }],
     modifiers: [
@@ -243,18 +315,21 @@ function handleSelected(target, dragging = false){
     toggleResize(dragging)
   }
   if(state.elements.length > 1){
-    let targetIndex = target.dataset.index;
+    let targetIndex = target.dataset.zIndex;
     state.elements.push(state.elements.splice(targetIndex, 1)[0]);
     for(var i = targetIndex; i < state.elements.length; i++){ // i can start at targetIndex
       state.elements[i].element.style.zIndex = i;
-      state.elements[i].element.dataset.index = i;
+      state.elements[i].element.dataset.zIndex = i;
     }
   }
+  console.table(state.elements)
 }
 
 function dragMoveListener (event) {
   var target = event.target
   handleSelected(target, true)
+  setTransformForElement(target.dataset.zIndex, event.dx, event.dy)
+  /*
   // keep the dragged position in the data-x/data-y attributes
   var x = (parseFloat(target.getAttribute('data-x')) || 0) + (event.dx / state.currentScale) //+ (state.translate.translateX / state.currentScale)
   var y = (parseFloat(target.getAttribute('data-y')) || 0) + (event.dy / state.currentScale) //+ (state.translate.translateY / state.currentScale)
@@ -267,7 +342,29 @@ function dragMoveListener (event) {
   // update the posiion attributes
   target.setAttribute('data-x', x)
   target.setAttribute('data-y', y)
+  state.elements[target.dataset.zIndex].x = x
+  state.elements[target.dataset.zIndex].y = y
+  */
   forceRedraw()
+}
+
+function setTransformForElement(elementIndex, dx = 0, dy = 0, width = -1, height = -1){
+  let elementObj = state.elements[elementIndex]
+  let x = (parseFloat(elementObj.element.dataset.x) || 0) + (dx / state.currentScale)
+  let y = (parseFloat(elementObj.element.dataset.y) || 0) + (dy / state.currentScale)
+  elementObj.element.setAttribute('data-x', x)
+  elementObj.element.setAttribute('data-y', y)
+  elementObj.x = x
+  elementObj.y = y
+
+  if(width != -1 && height != -1){
+    elementObj.width = width / state.currentScale
+    elementObj.height = height / state.currentScale
+    elementObj.element.style.width = width / state.currentScale + 'px'
+    elementObj.element.style.height = height / state.currentScale + 'px'
+  }
+
+  elementObj.element.style.transform = 'translate(' + x + 'px, ' + y + 'px)'
 }
 
 function forceRedraw(){

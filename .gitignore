@@ -79,3 +79,5 @@ typings/
 # electron forge output
 out/
 package-lock.json
+
+*.purgif

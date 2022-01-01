@@ -81,25 +81,23 @@
     
 </body>
 <script>
-    let currentScale = 1;
+    //let currentScale = 1;
 
-    let translateX = 0
-    let translateY = 0
+    //let translateX = 0
+    //let translateY = 0
 
     const factor = 0.1
     document.documentElement.addEventListener("wheel", (e) => {
+        currentScale = parseFloat(document.body.dataset.currentScale) || 1
         let delta = event.wheelDelta/120
         
-        //const nextScale = currentScale + delta * factor
-        const nextScale = Math.max(currentScale + delta * (currentScale / 2), 0.01)//delta * -1 * (currentScale / 2.5)
+        const nextScale = Math.max(currentScale + delta * (currentScale / 2), 0.01)
         console.log(delta, currentScale, nextScale)
         zoom(nextScale, e)
-        //let change = -1 * currentScale / 2.5
-        //currentScale += normalizedDeltaY * change;
-        //currentScale = Math.max(0.01, currentScale)
-        //document.documentElement.style.transform = `scale(${currentScale})`;
+
     })
     const zoom = (nextScale, event) => {
+        currentScale = parseFloat(document.body.dataset.currentScale) || 1
 
         const ratio = 1 - nextScale / currentScale
 
@@ -108,14 +106,15 @@
         clientY
         } = event
 
+        let translateX = (parseFloat(document.body.dataset.translateX) || 0);
+        let translateY = (parseFloat(document.body.dataset.translateY) || 0);
+
         translateX += (clientX - translateX) * ratio
         translateY += (clientY - translateY) * ratio
 
-        document.body.style.transform = `translate(${translateX}px, ${translateY}px) scale(${nextScale})`
-
+        
         currentScale = nextScale
-        myAPI.updateScale(nextScale)
-        myAPI.updateTranslate({translateX, translateY})
+        myAPI.updateScaleAndTranslate(currentScale, {translateX, translateY})
     }
 </script>
 </html>
