@@ -25,22 +25,44 @@ document.addEventListener('keydown', evt => {
 });
 
 document.addEventListener('contextmenu', () => {
-  if(Date.now() - mouseObj.lastUpdate > 100)
+  if(mouseObj.dragToggle) {
+    mouseObj.dragToggle = false; 
+    return;
+  }
+  
     ipcRenderer.send('show-context-menu')
 })
 let mouseObj = {
-    initPos: null,
-    lastUpdate: Date.now()
+  initPos: null,
+  initClientPos: null,
+  dragToggle: false,
+  //time dragging & distance dragged
 }
 document.addEventListener('mousedown', (e) => {
-    mouseObj.initPos = {x: e.clientX, y: e.clientY}
-    ipcRenderer.send('record-window-size', window.innerHeight, window.innerHeight)
+  mouseObj.initPos = {x: e.clientX, y: e.clientY}
+  mouseObj.initClientPos = {x: e.screenX, y: e.screenY}
+  ipcRenderer.send('record-window-size', window.innerHeight, window.innerHeight)
+  mouseObj.dragToggle = false
 })
 document.addEventListener('mousemove', (e) => {
-    if(e.buttons == 2){
-        ipcRenderer.send('move-electron-window', e.screenX, e.screenY, mouseObj.initPos)
-        mouseObj.lastUpdate = Date.now();
+  if(e.buttons == 2){
+      ipcRenderer.send('move-electron-window', e.screenX, e.screenY, mouseObj.initPos)
+      mouseObj.dragToggle = true;
+      
+  }
+})
+document.addEventListener('mouseup', (e) => {
+  if(mouseObj.dragToggle){
+    distance = Math.sqrt(
+                Math.pow(e.screenX - mouseObj.initClientPos.x, 2) 
+                +
+                Math.pow(e.screenY - mouseObj.initClientPos.y, 2) );
+
+    if(distance < 10){ 
+      mouseObj.dragToggle = false;
     }
+
+  }
 })
 
 ipcRenderer.on('clipboard', (event, msg) => {
@@ -72,6 +94,7 @@ function addVideoWithPath(path){
   elementObj.element = vidElement
 
   state.elements.push(elementObj)
+  
 
   itemHolder.appendChild(elementObj.element)
 }
@@ -126,7 +149,6 @@ document.addEventListener('dragover', (e) => {
 
 contextBridge.exposeInMainWorld('myAPI', {
   updateScale: (newScale) => {
-    //console.log('new scale', newScale, 'old scale', state.currentScale)
     state.currentScale = newScale
   },
   updateTranslate: (newTranslate) =>{
@@ -137,13 +159,17 @@ contextBridge.exposeInMainWorld('myAPI', {
   }
 })
 function toggleResize(enabled) {
+  if(!enabled){
+    interact('.draggable').resizable(false)
+  }
+  else
   interact('.draggable').resizable({
     // resize from all edges and corners
-    allowFrom: '.selectedItem',
-    edges: { left: true, right: true, bottom: true, top: true },
+    //allowFrom: '.selectedItem',
+    edges: { left: enabled, right: enabled, bottom: enabled, top: enabled },
     ratio: 1,
     enabled: enabled,
-    listeners: {
+    listeners: [{
       move (event) {
         var target = event.target
         var x = (parseFloat(target.getAttribute('data-x')) || 0)
@@ -164,7 +190,7 @@ function toggleResize(enabled) {
         target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height)
         forceRedraw()
       }
-    },
+    }],
     modifiers: [
       interact.modifiers.aspectRatio({
         // make sure the width is always double the height
@@ -174,7 +200,7 @@ function toggleResize(enabled) {
 
       // minimum size
       interact.modifiers.restrictSize({
-        min: { width: 100, height: 50 }
+        min: { width: 10 }
       })
     ],
 
@@ -192,11 +218,12 @@ interact('.draggable')
     //
     event.preventDefault()
   })
-toggleResize(true)
+toggleResize(false)
 function clearAllSelected(){
   document.querySelectorAll('.selectedItem').forEach((elm)=>{
     elm.classList.remove('selectedItem')
-})
+  })
+  toggleResize(false)
 }
 function handleSelected(target, dragging = false){
   var isSelected = target.classList.contains('selectedItem')
@@ -206,9 +233,14 @@ function handleSelected(target, dragging = false){
   if(!isSelected){
     if(dragging){
       clearAllSelected()
+      
     }
     target.classList.add('selectedItem')
+    toggleResize(true)
     //myAPI.toggleResize(true)
+  }
+  else{
+    toggleResize(dragging)
   }
   if(state.elements.length > 1){
     let targetIndex = target.dataset.index;
@@ -226,7 +258,6 @@ function dragMoveListener (event) {
   // keep the dragged position in the data-x/data-y attributes
   var x = (parseFloat(target.getAttribute('data-x')) || 0) + (event.dx / state.currentScale) //+ (state.translate.translateX / state.currentScale)
   var y = (parseFloat(target.getAttribute('data-y')) || 0) + (event.dy / state.currentScale) //+ (state.translate.translateY / state.currentScale)
-  //console.log(x,y,event.dx, event.dy)
   //x = x / state.currentScale
   //y = y / state.currentScale
 
