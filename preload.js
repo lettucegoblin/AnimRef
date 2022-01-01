@@ -22,41 +22,20 @@ function loadState(loadedState){
   if(!state.init)
     init();
   document.getElementById('itemHolder').innerHTML = ''
-/*
-  let loadedState = {
-    init: true,
-    currentScale: 0.5,
-    translate: {
-      translateX: 0,
-      translateY: 0
-    },
-    elements: [
-      {
-        path: "C:\\Users\\lettu\\Pictures\\qg8prrn82km71.jpg",
-        type: "img",
-        x: 0,
-        y: 0
-      }
-    ]
-  }*/
+
   updateScaleAndTranslate(loadedState.currentScale, loadedState.translate)
 
   state.elements = []
   for(var i in loadedState.elements){
     addImageWithPath(loadedState.elements[i].path, loadedState.elements[i].x, loadedState.elements[i].y, loadedState.elements[i].width, loadedState.elements[i].height)
   }
-
-  toggleResize(false)
-  //addImageWithPath("C:\\Users\\lettu\\Pictures\\qg8prrn82km71.jpg", 0, 0)
-  //addImageWithPath("C:\\Users\\lettu\\Pictures\\qg8prrn82km71.jpg", 200, 50)
-  
 }
 
 document.addEventListener('keydown', evt => {
-  
-  if (evt.key === 'c' && evt.ctrlKey) {
-    loadState()
-      //alert('Ctrl+C was pressed');
+  if(evt.key === 'Delete'){
+    
+    console.log('delete selected')
+    deleteSelected()
   } else if (evt.key === 'v' && evt.ctrlKey) {
     ipcRenderer.send('handle-paste')
     console.log('Ctrl+V was pressed');
@@ -219,66 +198,8 @@ function updateScaleAndTranslate(newScale, newTranslate){
 }
 
 contextBridge.exposeInMainWorld('myAPI', {
-  updateScaleAndTranslate: updateScaleAndTranslate,
-  toggleResize: (enabled) =>{
-    toggleResize(enabled)
-  }
+  updateScaleAndTranslate: updateScaleAndTranslate
 })
-function toggleResize(enabled) {
-  if(!enabled){
-    interact('.draggable').resizable(false)
-  }
-  else
-  interact('.draggable').resizable({
-    // resize from all edges and corners
-    //allowFrom: '.selectedItem',
-    edges: { left: enabled, right: enabled, bottom: enabled, top: enabled },
-    ratio: 1,
-    enabled: enabled,
-    listeners: [{
-      move (event) {
-        var target = event.target
-        //handleSelected(target, true)
-        setTransformForElement(target.dataset.zIndex, event.deltaRect.left, event.deltaRect.top, event.rect.width, event.rect.height)
-        forceRedraw()
-        /*
-        var target = event.target
-        var x = (parseFloat(target.getAttribute('data-x')) || 0)
-        var y = (parseFloat(target.getAttribute('data-y')) || 0)
-
-        // update the element's style
-        target.style.width = event.rect.width / state.currentScale + 'px'
-        target.style.height = event.rect.height / state.currentScale + 'px'
-
-        // translate when resizing from top or left edges
-        x += event.deltaRect.left / state.currentScale
-        y += event.deltaRect.top / state.currentScale
-
-        target.style.transform = 'translate(' + x + 'px,' + y + 'px)'
-
-        target.setAttribute('data-x', x)
-        target.setAttribute('data-y', y)
-        target.textContent = Math.round(event.rect.width) + '\u00D7' + Math.round(event.rect.height)
-        forceRedraw()
-        */
-      }
-    }],
-    modifiers: [
-      interact.modifiers.aspectRatio({
-        // make sure the width is always double the height
-        ratio: 'preserve',
-        // also restrict the size by nesting another modifier
-      }),
-
-      // minimum size
-      interact.modifiers.restrictSize({
-        min: { width: 10 }
-      })
-    ],
-
-    inertia: true
-  })
-}
 
 interact('.draggable')
   .draggable({
@@ -290,12 +211,59 @@ interact('.draggable')
     //
     event.preventDefault()
   })
-toggleResize(false)
+
+interact('.selectedItem').resizable({
+  // resize from all edges and corners
+  //allowFrom: '.selectedItem',
+  edges: { left: true, right: true, bottom: true, top: true },
+  ratio: 1,
+  enabled: true,
+  listeners: [{
+    move (event) {
+      var target = event.target
+      //handleSelected(target, true)
+      setTransformForElement(target.dataset.zIndex, event.deltaRect.left, event.deltaRect.top, event.rect.width, event.rect.height)
+      forceRedraw()
+    }
+  }],
+  modifiers: [
+    interact.modifiers.aspectRatio({
+      // make sure the width is always double the height
+      ratio: 'preserve',
+      // also restrict the size by nesting another modifier
+    }),
+    // minimum size
+    interact.modifiers.restrictSize({
+      min: { width: 10 }
+    })
+  ],
+  inertia: true
+}).draggable({
+  listeners: { move: dragMoveListener },
+  inertia: false
+}).on('tap', function (event) {
+  var target = event.target
+  handleSelected(target)
+  //
+  event.preventDefault()
+})
+
+function deleteSelected(){
+  if(state.elements.length == 0) return
+  
+  if(!state.elements[state.elements.length - 1].element.classList.contains('selectedItem')) return
+
+  state.elements[state.elements.length - 1].element.remove();
+  //delete state.elements[state.elements.length - 1].element
+  state.elements.pop();
+  clearAllSelected()
+}
+
 function clearAllSelected(){
   document.querySelectorAll('.selectedItem').forEach((elm)=>{
     elm.classList.remove('selectedItem')
+    elm.classList.add('draggable')
   })
-  toggleResize(false)
 }
 function handleSelected(target, dragging = false){
   var isSelected = target.classList.contains('selectedItem')
@@ -307,13 +275,10 @@ function handleSelected(target, dragging = false){
       clearAllSelected()
       
     }
+    target.classList.remove('draggable')
     target.classList.add('selectedItem')
-    toggleResize(true)
-    //myAPI.toggleResize(true)
   }
-  else{
-    toggleResize(dragging)
-  }
+  
   if(state.elements.length > 1){
     let targetIndex = target.dataset.zIndex;
     state.elements.push(state.elements.splice(targetIndex, 1)[0]);
@@ -322,7 +287,6 @@ function handleSelected(target, dragging = false){
       state.elements[i].element.dataset.zIndex = i;
     }
   }
-  console.table(state.elements)
 }
 
 function dragMoveListener (event) {

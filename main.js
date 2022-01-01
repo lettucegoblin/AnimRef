@@ -105,7 +105,6 @@ app.whenReady().then(() => {
           fs.readFile(result.filePaths[0], (err, data) => {
             if (err) throw err;
             let newState = JSON.parse(data);
-            console.log(newState);
             mainWin.webContents.send('load-scene', newState)
           });
         }
