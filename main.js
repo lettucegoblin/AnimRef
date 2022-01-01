@@ -33,7 +33,6 @@ function createWindow () {
   win.loadFile('index.html')
   return win;
 }
-console.log('hey')
 app.whenReady().then(() => {
   const mainWin = createWindow()
 
@@ -43,7 +42,9 @@ app.whenReady().then(() => {
       mainWin.setAlwaysOnTop(menuItem.checked);
     } 
   }));
-
+  globalShortcut.register('Control+Shift+I', () => {
+    mainWin.webContents.openDevTools()
+  });
   //globalShortcut.register('CommandOrControl+V', handlePaste)
 
   function handlePaste(){
@@ -141,17 +142,21 @@ app.whenReady().then(() => {
 
   Menu.setApplicationMenu(menu)
 
-  mainWin.webContents.openDevTools()
+  //mainWin.webContents.openDevTools()
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow()
     }
   })
+
+
+
   app.on('browser-window-created', (event, win) => {
     win.webContents.on('context-menu', (e, params) => {
       menu.popup(win, params.x, params.y)
     })
   })
+  
   ipcMain.on('show-context-menu', (event) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     menu.popup(win)
