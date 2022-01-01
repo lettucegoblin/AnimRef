@@ -27,7 +27,7 @@ function loadState(loadedState){
 
   state.elements = []
   for(var i in loadedState.elements){
-    addImageWithPath(loadedState.elements[i].path, loadedState.elements[i].x, loadedState.elements[i].y, loadedState.elements[i].width, loadedState.elements[i].height)
+    addMediaWithPath(loadedState.elements[i].path, loadedState.elements[i].type, loadedState.elements[i])
   }
 }
 
@@ -98,14 +98,15 @@ ipcRenderer.on('clipboard', (event, msg) => {
   let payload = JSON.parse(msg);
   console.log(payload)
   if(payload.type == 'filePath'){
-    addImageWithPath(payload.filePath)
+    //addImageWithPath(payload.filePath)
   }
   if(payload.type == 'dataURL'){
-    addImageWithPath(payload[payload.type])
+    //addImageWithPath(payload[payload.type])
     //URL.createObjectURL(object)
   }
 })
-function addVideoWithPath(path){
+function addVideoWithPath(path, x = 0, y = 0, width = -1, height = -1){
+  let itemHolder = document.getElementById('itemHolder')
   var elementObj = {
     path: path,
     type: undefined,
@@ -128,11 +129,12 @@ function addVideoWithPath(path){
   itemHolder.appendChild(elementObj.element)
 }
 function addImageWithPath(path, x = 0, y = 0, width = -1, height = -1){
-  document.querySelector('#welcome') && document.querySelector('#welcome').remove()
+  
   let itemHolder = document.getElementById('itemHolder')
   let newImg = document.createElement('img')
   newImg.src = path;
   newImg.classList.add('draggable')
+
   zIndex = state.elements.length;
   newImg.style.zIndex = zIndex
   newImg.dataset.zIndex = zIndex
@@ -155,6 +157,49 @@ function addImageWithPath(path, x = 0, y = 0, width = -1, height = -1){
   setTransformForElement(zIndex)
 }
 
+function addMediaWithPath(path, type = 'img', loadedState={ x: 0, y: 0, width: null, height: null}){
+  let itemHolder = document.getElementById('itemHolder')
+
+  let mediaElement = undefined
+  if(type =='img'){
+    mediaElement = document.createElement('img')
+    mediaElement.src = path;
+  } else if(type == 'video'){
+    mediaElement = document.createElement('video')
+    mediaElement.autoplay = true;
+    mediaElement.loop = true;
+    mediaElement.muted = true;
+    let srcElement = document.createElement('source')
+    srcElement.src = path;
+    mediaElement.appendChild(srcElement)
+  } else {
+    alert('unsupported media type')
+    return;
+  }
+  mediaElement.classList.add('draggable')
+
+  zIndex = state.elements.length;
+  mediaElement.style.zIndex = zIndex
+  mediaElement.dataset.zIndex = zIndex
+  mediaElement.dataset.x = loadedState.x
+  mediaElement.dataset.y = loadedState.y
+  if(loadedState.width != null && loadedState.height != null){
+    mediaElement.width = loadedState.width
+    mediaElement.height = loadedState.height
+  }
+  state.elements.push({
+    path: path,
+    type: type,
+    element: mediaElement,
+    width: loadedState.width,
+    height: loadedState.height
+  })
+
+  itemHolder.appendChild(mediaElement)
+
+  setTransformForElement(zIndex)
+}
+
 document.addEventListener('drop', (event) => {
   event.preventDefault();
   event.stopPropagation();
@@ -165,10 +210,11 @@ document.addEventListener('drop', (event) => {
   for (const f of event.dataTransfer.files) {
       // Using the path attribute to get absolute file path
       console.log('File Path of dragged files: ', f.path, state)
+      document.querySelector('#welcome') && document.querySelector('#welcome').remove()
       if(f.path.endsWith('.mp4')){
-        addVideoWithPath(f.path)
+        addMediaWithPath(f.path, 'video')
       } else
-        addImageWithPath(f.path)
+        addMediaWithPath(f.path)
     }
 });
 function init(){
@@ -312,7 +358,7 @@ function dragMoveListener (event) {
   forceRedraw()
 }
 
-function setTransformForElement(elementIndex, dx = 0, dy = 0, width = -1, height = -1){
+function setTransformForElement(elementIndex, dx = 0, dy = 0, width = null, height = null){
   let elementObj = state.elements[elementIndex]
   let x = (parseFloat(elementObj.element.dataset.x) || 0) + (dx / state.currentScale)
   let y = (parseFloat(elementObj.element.dataset.y) || 0) + (dy / state.currentScale)
@@ -321,7 +367,7 @@ function setTransformForElement(elementIndex, dx = 0, dy = 0, width = -1, height
   elementObj.x = x
   elementObj.y = y
 
-  if(width != -1 && height != -1){
+  if(width != null && height != null){
     elementObj.width = width / state.currentScale
     elementObj.height = height / state.currentScale
     elementObj.element.style.width = width / state.currentScale + 'px'
