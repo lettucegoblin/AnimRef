@@ -1,0 +1,127 @@
+html{
+    border: #0c0c0c solid 1px;
+    transform-origin: 0 0;
+    transform: transale3d(0,0,0); 
+}
+html, body{
+    background: #202020;
+    background-color: transparent;
+    height: calc(100% - 2px);
+    margin: 0px;
+    padding: 0px;
+    
+}
+body{
+    transition: -webkit-transform 0.1s ease 0s; 
+    transform-origin: 0px 0px; 
+    transform: translate(0px, 0px) scale(1.0);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    width: 0px;
+    height: 0px;
+}
+#welcome{
+    font-family: sans-serif;
+    color: #7A7A7A;
+    text-align: center;
+    user-select: none;
+    width: 360px;
+    display: flex;
+    flex-direction: column;
+    height: 107px;
+    justify-content: flex-end;
+    position: absolute;
+    left: calc(50vw - 360px/2);
+    top: calc(50vh - 140px/2);
+}
+h1, p{
+    margin: 0;
+    
+}
+#welcome h1{
+    line-height: 1;
+    font-weight: normal;
+    font-size: x-large;
+    color: #888888;
+}
+#welcome p{
+    margin-top: 12px;
+}
+#itemHolder{
+    height: 100%;
+    width: 100%;
+}
+.selectedItem{
+    outline: 3px solid rgb(37 157 199);
+}
+.selectedItem.resizeItem{
+
+}
+#itemHolder > *{
+    position: absolute;
+}
+.iframeDiv{
+    
+    min-height: 0;
+    min-width: 0;
+    user-select: none;
+    height: 100%;
+    pointer-events: none;
+    width: 100%;
+}
+@keyframes rock {
+    0% {
+        transform: rotate(-9deg);
+        filter: blur(0.5px);
+    }
+    50% {
+        filter: blur(2px);
+    }
+
+    100% {
+        transform: rotate(9deg);
+        filter: blur(0.5px);
+    }
+}
+@keyframes gradientLoad {
+    from {
+        background-size: 150% 100%;
+        filter: drop-shadow(2px 4px 6px black);
+    }
+
+    to {
+        background-size: 200% 200%;
+        filter: drop-shadow(2px 4px 2px black);
+    }
+}
+.playerNeedsSetup::before {
+    background-image: url("images/YouTube_dark_icon_(2017).svg");
+    background-repeat: no-repeat;
+    content: "";
+    position: absolute;
+    width: 71px;
+    height: 50px;
+    transform: rotate(0deg);
+
+    top: calc(50% - 50px/2);
+    right: 0px;
+    bottom: 0px;
+    left: calc(50% - 71px/2);
+    opacity: 0.5;
+    animation-name:rock;
+    animation-duration: 0.5s;
+    animation-direction: alternate;
+    animation-iteration-count: infinite;
+}
+.playerNeedsSetup {
+    background-image: radial-gradient(circle, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%);
+    background-size: 200% 200%;
+    filter: drop-shadow(2px 4px 6px black);
+    animation-name: gradientLoad;
+    animation-duration: 1s;
+    animation-direction: alternate-reverse;
+    animation-iteration-count: infinite;
+    background-position: center;
+}

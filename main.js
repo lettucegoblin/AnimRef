@@ -33,6 +33,7 @@ function createWindow () {
   win.loadFile('index.html')
   return win;
 }
+app.commandLine.appendSwitch('disable-site-isolation-trials');
 app.whenReady().then(() => {
   const mainWin = createWindow()
 

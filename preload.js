@@ -97,67 +97,26 @@ ipcRenderer.on('save-scene', (event, filePath) =>{
 ipcRenderer.on('clipboard', (event, msg) => {
   let payload = JSON.parse(msg);
   console.log(payload)
+  if(/youtube.com\/.*v=([^\?]*)/.test(payload[payload.type])){
+    addMediaWithPath(payload[payload.type], "youtube")
+  }else
+    addMediaWithPath(payload[payload.type])
+  /*
   if(payload.type == 'filePath'){
+    addMediaWithPath(payload.filePath)
     //addImageWithPath(payload.filePath)
   }
   if(payload.type == 'dataURL'){
+    addMediaWithPath(payload.filePath)
     //addImageWithPath(payload[payload.type])
     //URL.createObjectURL(object)
   }
+  */
 })
-function addVideoWithPath(path, x = 0, y = 0, width = -1, height = -1){
-  let itemHolder = document.getElementById('itemHolder')
-  var elementObj = {
-    path: path,
-    type: undefined,
-    element: undefined
-  }
-  let vidElement = document.createElement('video')
-  vidElement.autoplay = true;
-  vidElement.muted = true;
-  vidElement.classList.add('draggable')
-  let srcElement = document.createElement('source')
-  srcElement.src = path;
-  vidElement.appendChild(srcElement)
-  
-  elementObj.type = 'video'
-  elementObj.element = vidElement
-
-  state.elements.push(elementObj)
-  
-
-  itemHolder.appendChild(elementObj.element)
-}
-function addImageWithPath(path, x = 0, y = 0, width = -1, height = -1){
-  
-  let itemHolder = document.getElementById('itemHolder')
-  let newImg = document.createElement('img')
-  newImg.src = path;
-  newImg.classList.add('draggable')
-
-  zIndex = state.elements.length;
-  newImg.style.zIndex = zIndex
-  newImg.dataset.zIndex = zIndex
-  newImg.dataset.x = x
-  newImg.dataset.y = y
-  if(width != -1 && height != -1){
-    newImg.width = width
-    newImg.height = height
-  }
-  state.elements.push({
-    path: path,
-    type: 'img',
-    element: newImg,
-    width: width,
-    height: height
-  })
-
-  itemHolder.appendChild(newImg)
-
-  setTransformForElement(zIndex)
-}
 
 function addMediaWithPath(path, type = 'img', loadedState={ x: 0, y: 0, width: null, height: null}){
+  if(!state.init) init();
+  document.querySelector('#welcome') && document.querySelector('#welcome').remove()
   let itemHolder = document.getElementById('itemHolder')
 
   let mediaElement = undefined
@@ -172,7 +131,35 @@ function addMediaWithPath(path, type = 'img', loadedState={ x: 0, y: 0, width: n
     let srcElement = document.createElement('source')
     srcElement.src = path;
     mediaElement.appendChild(srcElement)
-  } else {
+  } else if(type == 'youtube') {
+    //mediaElement = document.createElement('iframe')
+    if(/youtube.com\/.*v=([^\?]*)/.test(path)){
+
+      var code = extractYoutubeId(path)
+      if(code == null) return;
+      mediaElement = document.createElement('div')
+      mediaElement.classList.add('youtubePlayer')
+      mediaElement.classList.add('playerNeedsSetup')
+      mediaElement.dataset.idcode = code
+      
+      mediaElement.style.width = (loadedState.width || 640) + "px";
+      mediaElement.style.height = (loadedState.height || 360) + "px";
+
+      //mediaElement.style.background = 'red'
+      var iframeDiv = document.createElement('div')
+      iframeDiv.classList.add('iframeDiv')
+      mediaElement.appendChild(iframeDiv)
+      document.getElementById('eventTrigger').dataset.trigger = Date.now()
+      /*
+      mediaElement.src = 
+      `https://www.youtube.com/embed/${code}?` +//&autoplay=1` +
+      `&controls=0&disablekb=1&enablejsapi=1&fs=0&loop=1` +
+      `&origin=${window.location.href}`
+      mediaElement.frameBorder = "0"
+      mediaElement.allowFullscreen = false;
+      */
+    }
+  } else{
     alert('unsupported media type')
     return;
   }
@@ -203,14 +190,14 @@ function addMediaWithPath(path, type = 'img', loadedState={ x: 0, y: 0, width: n
 document.addEventListener('drop', (event) => {
   event.preventDefault();
   event.stopPropagation();
-  if(!state.init) init();
+  //if(!state.init) init();
   // Todo check if file is valid
   
   
   for (const f of event.dataTransfer.files) {
       // Using the path attribute to get absolute file path
       console.log('File Path of dragged files: ', f.path, state)
-      document.querySelector('#welcome') && document.querySelector('#welcome').remove()
+      
       if(f.path.endsWith('.mp4')){
         addMediaWithPath(f.path, 'video')
       } else
@@ -218,8 +205,10 @@ document.addEventListener('drop', (event) => {
     }
 });
 function init(){
-  document.documentElement.addEventListener('click', (event) => {
+  document.documentElement.addEventListener('mousedown', (event) => {
     var target = event.target
+    //console.log('click', target)
+    
     if(target.id == 'root'){
       console.log('background click')
       clearAllSelected()
@@ -231,6 +220,12 @@ document.addEventListener('dragover', (e) => {
   e.preventDefault();
   e.stopPropagation();
 });
+function extractYoutubeId(path){
+  const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#\&\?]*).*/;
+  var capture = path.match(regExp)//path.match(/v=([^\?]*)/);
+
+  return capture[7]
+}
 
 function updateScaleAndTranslate(newScale, newTranslate){
   state.currentScale = newScale
@@ -242,9 +237,24 @@ function updateScaleAndTranslate(newScale, newTranslate){
 
   //window.currentScale = state.currentScale;
 }
-
+let objPlayground = {hi:'yo'};
 contextBridge.exposeInMainWorld('myAPI', {
-  updateScaleAndTranslate: updateScaleAndTranslate
+  updateScaleAndTranslate: updateScaleAndTranslate,
+  updateYoutubeOriginalSize: (idcode, w, h) => {
+    for(var i in state.elements){
+      if(state.elements[i].type == 'youtube' && extractYoutubeId(state.elements[i].path) == idcode){
+        state.elements[i].width = state.elements[i].width || w;
+        state.elements[i].height = state.elements[i].height || h;
+        
+        state.elements[i].element.style.width = state.elements[i].width
+        state.elements[i].element.style.height = state.elements[i].height
+        console.log(state.elements[i])
+      }
+    }
+    
+  },
+  objPlayground: objPlayground
+
 })
 
 interact('.draggable')
@@ -253,6 +263,7 @@ interact('.draggable')
     inertia: false
   }).on('tap', function (event) {
     var target = event.target
+    console.log(objPlayground)
     handleSelected(target)
     //
     event.preventDefault()
@@ -312,7 +323,9 @@ function clearAllSelected(){
   })
 }
 function handleSelected(target, dragging = false){
+  /*
   var isSelected = target.classList.contains('selectedItem')
+  
   if(!dragging){
     clearAllSelected()
   }
@@ -323,7 +336,10 @@ function handleSelected(target, dragging = false){
     }
     target.classList.remove('draggable')
     target.classList.add('selectedItem')
-  }
+  }*/
+  clearAllSelected()
+  target.classList.remove('draggable')
+  target.classList.add('selectedItem')
   
   if(state.elements.length > 1){
     let targetIndex = target.dataset.zIndex;
