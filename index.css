@@ -125,3 +125,12 @@ h1, p{
     animation-iteration-count: infinite;
     background-position: center;
 }
+.editVideo {
+    width: 100vw !important;
+    height: 100vh !important;
+    transform: unset !important;
+    background-color: black;
+}
+.disableBorder {
+    border:unset !important;
+}

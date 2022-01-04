@@ -34,11 +34,35 @@ function createWindow () {
   return win;
 }
 app.commandLine.appendSwitch('disable-site-isolation-trials');
+const contextMenu = new Menu()
+
 app.whenReady().then(() => {
   const mainWin = createWindow()
 
-  const menu = new Menu()
-  menu.append(new MenuItem({ label: 'Always on Top', type: 'checkbox', checked: true, 
+  contextMenu.append(new MenuItem({ id:"close-edit-video", label: 'Close Edit Video', visible: false,
+    click: (menuItem, browserWindow, event) => {
+      //mainWin.setAlwaysOnTop(menuItem.checked);
+      mainWin.webContents.send('close-edit-video')
+    } 
+  }));
+
+  contextMenu.append(new MenuItem({ id:"edit-video", label: 'Edit Video', visible: false,
+    click: (menuItem, browserWindow, event) => {
+      //mainWin.setAlwaysOnTop(menuItem.checked);
+      mainWin.webContents.send('edit-video')
+    } 
+  }));
+  contextMenu.append(new MenuItem({ label: 'Paste',
+  accelerator: process.platform === 'darwin' ? 'Cmd+V' : 'Ctrl+V',
+    click: (menuItem, browserWindow, event) => {
+      console.log('click paste')
+      
+      handlePaste();
+    } 
+  }));
+  contextMenu.append(new MenuItem({ type: 'separator' }))
+
+  contextMenu.append(new MenuItem({ label: 'Always on Top', type: 'checkbox', checked: true, 
     click: (menuItem, browserWindow, event) => {
       mainWin.setAlwaysOnTop(menuItem.checked);
     } 
@@ -81,18 +105,11 @@ app.whenReady().then(() => {
       mainWin.webContents.send('clipboard', JSON.stringify(payload)) // send to web page
   }
 
-  menu.append(new MenuItem({ label: 'Paste',
-  accelerator: process.platform === 'darwin' ? 'Cmd+V' : 'Ctrl+V',
-    click: (menuItem, browserWindow, event) => {
-      console.log('click paste')
-      
-      handlePaste();
-    } 
-  }));
   
   
-  menu.append(new MenuItem({ type: 'separator' }))
-  menu.append(new MenuItem({ 
+  
+  contextMenu.append(new MenuItem({ type: 'separator' }))
+  contextMenu.append(new MenuItem({ 
     label: 'Load',
     click: (menuItem, browserWindow, event) => {
       dialog.showOpenDialog({ 
@@ -115,7 +132,7 @@ app.whenReady().then(() => {
       })
     }
   }));
-  menu.append(new MenuItem({ 
+  contextMenu.append(new MenuItem({ 
     label: 'Save',
     click: (menuItem, browserWindow, event) => {
       dialog.showSaveDialog({ 
@@ -134,14 +151,14 @@ app.whenReady().then(() => {
       })
     }
   }));
-  menu.append(new MenuItem({ 
+  contextMenu.append(new MenuItem({ 
     label: 'Close',
     click: (menuItem, browserWindow, event) => {
       browserWindow.close()
     }
   }));
 
-  Menu.setApplicationMenu(menu)
+  Menu.setApplicationMenu(contextMenu)
 
   //mainWin.webContents.openDevTools()
   app.on('activate', () => {
@@ -158,9 +175,17 @@ app.whenReady().then(() => {
     })
   })
   
-  ipcMain.on('show-context-menu', (event) => {
+  ipcMain.on('show-context-menu', (event, menuType) => {
     const win = BrowserWindow.fromWebContents(event.sender)
-    menu.popup(win)
+    console.log(menuType)
+    contextMenu.getMenuItemById("edit-video").visible = false;
+    contextMenu.getMenuItemById("close-edit-video").visible = false;
+    if(menuType == 'youtube' || menuType == 'video'){
+      contextMenu.getMenuItemById("edit-video").visible = true;
+    } else if(menuType == 'edit-video'){
+      contextMenu.getMenuItemById("close-edit-video").visible = true;
+    }
+    contextMenu.popup(win)
   })
   ipcMain.on('save-scene', (event, filePath, stateCopy) => {
     console.log('save', filePath, stateCopy)

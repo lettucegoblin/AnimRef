@@ -5,7 +5,10 @@ const {
 
 const interact = require('./interact.min.js')
 let state = {
-  init: false,
+  mode: 'init', // 'init', 'standard', 'edit-video'
+  editVideo:{
+    backupState: {},
+  },
   currentScale: 1,
   translate: {
     translateX: 0,
@@ -15,11 +18,37 @@ let state = {
 
   ]
 }
+function closeEditVideo(){
+  state.mode = 'standard'
+  updateScaleAndTranslate(state.editVideo.backupState.currentScale, state.editVideo.backupState.translate)
+  state.editVideo.video.element.className = state.editVideo.backupState.elementClasses
+  document.querySelector('#root').classList.remove('disableBorder')
+}
+
+function editVideo(video){
+  state.mode = 'edit-video'
+  document.querySelector('#root').style.cursor = ""
+  state.editVideo.video = video
+  state.editVideo.backupState = {
+    currentScale: state.currentScale,
+    translate: Object.assign({}, state.translate),
+    elementClasses: video.element.className
+  }
+  updateScaleAndTranslate(1, {
+    translateX: 0,
+    translateY: 0
+  })
+
+  video.element.className = "editVideo"
+  document.querySelector('#root').classList.add('disableBorder')
+  
+  console.log(video)
+}
 
 function loadState(loadedState){
   // file stuff
 
-  if(!state.init)
+  if(state.mode == 'init')
     init();
   document.getElementById('itemHolder').innerHTML = ''
 
@@ -41,14 +70,22 @@ document.addEventListener('keydown', evt => {
     console.log('Ctrl+V was pressed');
   }
 });
-
-document.addEventListener('contextmenu', () => {
+function getSelected(){
+  if(document.querySelector('.editVideo')) return {type:'edit-video'}
+  let lastIndex = state.elements.length - 1
+  if(!state.elements[lastIndex] || !state.elements[lastIndex].element.classList.contains('selectedItem')) return null
+  
+  return state.elements[lastIndex]
+}
+document.addEventListener('contextmenu', (e) => {
+  e.preventDefault()
+  console.log(state)
   if(mouseObj.dragToggle) {
     mouseObj.dragToggle = false; 
     return;
   }
   
-    ipcRenderer.send('show-context-menu')
+  ipcRenderer.send('show-context-menu', getSelected()?.type || "void")
 })
 let mouseObj = {
   initPos: null,
@@ -81,6 +118,12 @@ document.addEventListener('mouseup', (e) => {
     }
 
   }
+})
+ipcRenderer.on('close-edit-video', (event, newState) =>{
+  closeEditVideo()
+})
+ipcRenderer.on('edit-video', (event, newState) =>{
+  editVideo(getSelected())
 })
 ipcRenderer.on('load-scene', (event, newState) =>{
   loadState(newState)
@@ -115,7 +158,7 @@ ipcRenderer.on('clipboard', (event, msg) => {
 })
 
 function addMediaWithPath(path, type = 'img', loadedState={ x: 0, y: 0, width: null, height: null}){
-  if(!state.init) init();
+  if(state.mode == 'init') init();
   document.querySelector('#welcome') && document.querySelector('#welcome').remove()
   let itemHolder = document.getElementById('itemHolder')
 
@@ -190,7 +233,6 @@ function addMediaWithPath(path, type = 'img', loadedState={ x: 0, y: 0, width: n
 document.addEventListener('drop', (event) => {
   event.preventDefault();
   event.stopPropagation();
-  //if(!state.init) init();
   // Todo check if file is valid
   
   
@@ -214,6 +256,7 @@ function init(){
       clearAllSelected()
     }
   })
+  state.mode = 'standard'
 }
 
 document.addEventListener('dragover', (e) => {
@@ -342,7 +385,8 @@ function handleSelected(target, dragging = false){
   target.classList.add('selectedItem')
   
   if(state.elements.length > 1){
-    let targetIndex = target.dataset.zIndex;
+    let targetIndex = parseInt(target.dataset.zIndex);
+    
     state.elements.push(state.elements.splice(targetIndex, 1)[0]);
     for(var i = targetIndex; i < state.elements.length; i++){ // i can start at targetIndex
       state.elements[i].element.style.zIndex = i;
