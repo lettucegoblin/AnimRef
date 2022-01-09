@@ -127,10 +127,68 @@ h1, p{
 }
 .editVideo {
     width: 100vw !important;
-    height: 100vh !important;
+    height: calc(100vh - 20px) !important;
     transform: unset !important;
     background-color: black;
 }
 .disableBorder {
     border:unset !important;
+}
+.timeline {
+    position: absolute;
+    width: 100vw;
+    height: 20px;
+    background: #403f3f;
+    bottom: 0;
+    z-index: 9999;
+    left: 0;
+    right: 0;
+    top: calc(100vh - 20px);
+}
+#progressbar{
+    background-color: #ececec;
+    box-shadow: inset 0 0.5em 0.5em rgb(0 0 0 / 5%);
+    bottom: 0;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: all 400ms ease-out;
+}
+#slider{
+    background-color: rgba(78,47,102,1);
+}
+.hide {
+    display: none !important;
+}
+#slider:hover .noUi-connect, #slider:hover .noUi-handle{
+    filter:brightness(1.5);
+    transition: filter 300ms ease;
+}
+#slider .noUi-handle {
+    border-left: 1em solid transparent;
+    border-right: 1em solid transparent;
+    border-bottom: 1em solid #a74040;
+    outline: none;
+    border-radius: unset;
+    background: unset; 
+    cursor: default;
+    box-shadow: unset;
+    border-top: unset;
+    opacity: 0.95;
+}
+#slider .noUi-handle:before,#slider  .noUi-handle:after {
+    content: unset;
+}
+#slider .noUi-connect {
+    background: #b128284a;/*linear-gradient(90deg, rgba(78,47,102,1) 0%, rgba(91,52,122,1) 47%, rgba(113,80,136,1) 47%, rgba(121,76,157,1) 100%);*/
+    opacity: 0.9;
+    box-shadow: inset 3px 2px 15px 0px #000000;
+    transition: all 400ms ease-out;
+}
+#slider .noUi-target {
+    background: #bfbfbf;
+    border-radius: 7px;
+    border: unset; 
+    box-shadow: inset 5px 6px 7px #d3d1d6, 8px 2px 8px -5px #4b285d;
 }

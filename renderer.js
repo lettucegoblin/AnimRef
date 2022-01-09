@@ -1,4 +1,18 @@
 
+const sliderElement = document.querySelector('#slider')
+noUiSlider.create(sliderElement, {
+    start: [00, 100],
+    connect: true,
+    behaviour: 'unconstrained-tap',
+    range: {
+        'min': 0,
+        'max': 100
+    }
+});
+slider.noUiSlider.on('start', function () { 
+
+});
+
 const factor = 0.1
 document.documentElement.addEventListener("wheel", (e) => {
     if(document.querySelector('.editVideo')) return;
@@ -42,7 +56,7 @@ function onPlayerReady(event) {
     event.target.setVolume(0);
     event.target.mute();
 
-    
+    // lifts youtube video to last element at the root of body 
     event.target.getIframe().contentDocument.body.appendChild(player.getIframe().contentDocument.querySelector('video'))
 
     event.target.playVideo();
@@ -53,11 +67,21 @@ var done = false;
 function onPlayerStateChange(event) {
   if (event.data == YT.PlayerState.PLAYING && !done) {
     //setTimeout(stopVideo, 6000);
-    event.target.getIframe().contentDocument.querySelector('video').loop = true
-    let videoWidth = event.target.getIframe().contentDocument.querySelector('video').videoWidth
-    let videoHeight = event.target.getIframe().contentDocument.querySelector('video').videoHeight
+    let videoElement = event.target.getIframe().contentDocument.querySelector('video')
+    videoElement.loop = true
+    /*
+    videoElement.addEventListener('timeupdate', function(){
+        //if im the editvideo
+        if(document.querySelector(`.editVideo[data-idcode="${this.dataset.idcode}"]`)){
+            onPlayerProgress.apply(this, arguments)
+        }
+    })*/
+
+    let videoWidth = videoElement.videoWidth
+    let videoHeight = videoElement.videoHeight
     console.log(videoWidth, videoHeight)
     let idcode = event.target.getIframe().parentElement.dataset.idcode
+    videoElement.dataset.idcode = idcode
     myAPI.updateYoutubeOriginalSize(idcode, videoWidth, videoHeight)
     //event.target.getIframe().parentElement.style.width = videoWidth + 'px'
     //event.target.getIframe().parentElement.style.height = videoHeight + 'px'

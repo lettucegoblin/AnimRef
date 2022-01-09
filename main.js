@@ -97,6 +97,9 @@ app.whenReady().then(() => {
         if(validateUrl(potentialUrl)){
           payload.type = 'filePath'
           payload.filePath = potentialUrl
+        } else{
+          console.log('not a url')
+          return
         }
       }
 

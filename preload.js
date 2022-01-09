@@ -3,6 +3,7 @@ const {
   contextBridge 
 } = require('electron')
 
+
 const interact = require('./interact.min.js')
 let state = {
   mode: 'init', // 'init', 'standard', 'edit-video'
@@ -18,14 +19,22 @@ let state = {
 
   ]
 }
+
+let videoExample = {
+  loopPairs: [[0, 119], [44, 56]], // can derive A, B, C & color coding from index
+  activeLoopPair: 0
+}
 function closeEditVideo(){
+  videoElement.removeEventListener('timeupdate', onPlayerProgress)
   state.mode = 'standard'
   updateScaleAndTranslate(state.editVideo.backupState.currentScale, state.editVideo.backupState.translate)
   state.editVideo.video.element.className = state.editVideo.backupState.elementClasses
   document.querySelector('#root').classList.remove('disableBorder')
+  document.querySelector('#editVideoTools').classList.add('hide')
 }
 
 function editVideo(video){
+  console.log('video', video)
   state.mode = 'edit-video'
   document.querySelector('#root').style.cursor = ""
   state.editVideo.video = video
@@ -41,8 +50,57 @@ function editVideo(video){
 
   video.element.className = "editVideo"
   document.querySelector('#root').classList.add('disableBorder')
+  document.querySelector('#editVideoTools').classList.remove('hide')
+
+  if(video.type =='youtube'){
+    videoElement = document.querySelector('.editVideo iframe').contentDocument.querySelector('video')
+  } else{
+    videoElement = document.querySelector('.editVideo')
+  }
+  videoElement.addEventListener('timeupdate', onPlayerProgress)
+  //
   
   console.log(video)
+}
+
+function onPlayerProgress(e){
+  let sliderElement = document.querySelector('#slider')
+  let currentTimePercent = (this.currentTime / this.duration * 100)
+  if(sliderElement.classList.contains('noUi-state-drag')){
+      dragPercent = parseFloat(sliderElement.querySelector('.noUi-active')['ariaValueNow'])
+      this.currentTime = percentToCurrentTime(dragPercent, this.duration)
+  } else {
+      let sliderPositions = document.querySelectorAll('.noUi-handle')
+      let leftSliderPercent = Math.min(sliderPositions[0]['ariaValueText'], sliderPositions[1]['ariaValueText'])
+      let rightSliderPercent = Math.max(sliderPositions[0]['ariaValueText'], sliderPositions[1]['ariaValueText'])
+      if(leftSliderPercent > currentTimePercent){
+          this.currentTime = percentToCurrentTime(leftSliderPercent, this.duration)
+          currentTimePercent = (this.currentTime / this.duration * 100)
+      }
+      if(rightSliderPercent < currentTimePercent){
+          //.noUi-state-drag
+          if(sliderElement.classList.contains('noUi-state-drag')){
+              this.currentTime = percentToCurrentTime(rightSliderPercent, this.duration)
+          } else
+              this.currentTime = percentToCurrentTime(leftSliderPercent, this.duration)
+          
+          currentTimePercent = (this.currentTime / this.duration * 100)
+      }
+  }
+  let progressBarWidth = sliderElement.getBoundingClientRect().width // 10
+
+  let progressBarTimePosition = progressBarWidth * (currentTimePercent / 100) // 4
+  //    transform: translateX(41.4966%);
+  document.getElementById('progressbar').style.transform = `translateX(${progressBarTimePosition}px)`
+  //sliderElement.style.background = `linear-gradient(90deg, rgba(78,47,102,1) 0%, rgba(91,52,122,1) ${progressBarTimePosition}px, rgba(113,80,136,1) ${progressBarTimePosition}px, rgba(121,76,157,1) 100%)`
+  
+}
+function percentToCurrentTime(percent, duration){
+  if(percent >= 100) return duration
+  if(percent <= 0) return 0
+  let ct = (percent*duration)/100
+  console.log("percentToCurrentTime", ct)
+  return ct
 }
 
 function loadState(loadedState){
@@ -171,6 +229,7 @@ function addMediaWithPath(path, type = 'img', loadedState={ x: 0, y: 0, width: n
     mediaElement.autoplay = true;
     mediaElement.loop = true;
     mediaElement.muted = true;
+    
     let srcElement = document.createElement('source')
     srcElement.src = path;
     mediaElement.appendChild(srcElement)

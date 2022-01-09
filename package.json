@@ -12,17 +12,18 @@
   "author": "lettuce",
   "license": "ISC",
   "devDependencies": {
-    "@electron-forge/cli": "^6.0.0-beta.54",
-    "@electron-forge/maker-deb": "^6.0.0-beta.54",
+    "@electron-forge/cli": "^6.0.0-beta.61",
+    "@electron-forge/maker-deb": "^6.0.0-beta.61",
     "@electron-forge/maker-rpm": "^6.0.0-beta.54",
     "@electron-forge/maker-squirrel": "^6.0.0-beta.54",
     "@electron-forge/maker-zip": "^6.0.0-beta.54",
-    "electron": "^12.0.5",
+    "electron": "^12.2.3",
     "electron-rebuild": "^2.3.5"
   },
   "dependencies": {
     "dombo": "^3.2.0",
     "electron-squirrel-startup": "^1.0.0",
+    "nouislider": "^15.5.0",
     "try-require": "^1.2.1",
     "win-mouse": "^2.0.1"
   },

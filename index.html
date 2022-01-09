@@ -5,12 +5,18 @@
     <title>Pureref Gif Support</title>
     <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline' https://www.youtube.com;" />
     <link rel="stylesheet" href="index.css">
+    <link href="node_modules/nouislider/dist/nouislider.css" rel="stylesheet">
+    <script src="node_modules/nouislider/dist/nouislider.js"></script>
     <script src = 'https://www.youtube.com/iframe_api' defer></script>
     <script src = 'renderer.js' defer></script>
 </head>
 
 <body>
-    <div id='playerHolder'><div id="player"></div></div>
+    <div id="editVideoTools" class="hide">
+        <div class="timeline">
+            <div id='slider'><div id='progressbar'></div></div>
+        </div>
+    </div>
     
     <div id="eventTrigger"></div>
     <div id='welcome'>
