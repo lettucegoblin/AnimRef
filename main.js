@@ -11,6 +11,10 @@ const {
   } = require('electron')
 const path = require('path')
 const fs = require('fs');
+const Store = require('electron-store');
+
+const store = new Store();
+//store.clear()
 
 //menu.append(new MenuItem({ label: 'Electron', type: 'checkbox', checked: true }))
 
@@ -35,7 +39,7 @@ function createWindow () {
 }
 app.commandLine.appendSwitch('disable-site-isolation-trials');
 const contextMenu = new Menu()
-
+const recentSubmenu = new Menu()
 app.whenReady().then(() => {
   const mainWin = createWindow()
 
@@ -107,11 +111,47 @@ app.whenReady().then(() => {
       //console.log(payload)
       mainWin.webContents.send('clipboard', JSON.stringify(payload)) // send to web page
   }
-
-  
-  
-  
+  function addToRecent(filePath){
+    var recent = JSON.parse(store.get('recent') || "[]")
+    console.log("addToRecent", store.get('recent'), filePath)
+    
+    if(recent.indexOf(filePath) != -1) return
+    recent.push(filePath)
+    store.set('recent', JSON.stringify(recent));
+    console.log("addedToRecent", store.get('recent'), filePath)
+    recentSubmenu.append(new MenuItem({ 
+      label: filePath,
+      click: (menuItem, browserWindow, event) => {
+        readAndLoadFilePath(menuItem.label)
+      }
+    }))
+  }
+  function populateRecent(){
+    var recent = JSON.parse(store.get('recent') || "[]")
+    console.log("populateRecent", store.get('recent'))
+    for(recentfile of recent){
+      recentSubmenu.append(new MenuItem({ 
+        label: recentfile,
+        click: (menuItem, browserWindow, event) => {
+          readAndLoadFilePath(menuItem.label)
+        }
+      }))
+    }
+  }
   contextMenu.append(new MenuItem({ type: 'separator' }))
+  
+  function readAndLoadFilePath(filePath){
+    fs.readFile(filePath, (err, data) => {
+      if (err) throw err;
+      let newState = JSON.parse(data);
+      mainWin.webContents.send('load-scene', newState, filePath)
+    });
+  }
+
+  contextMenu.append(new MenuItem({ label: "Recent", type: 'submenu', 
+    submenu: recentSubmenu
+  }))
+  populateRecent()
   contextMenu.append(new MenuItem({ 
     label: 'Load',
     click: (menuItem, browserWindow, event) => {
@@ -122,13 +162,9 @@ app.whenReady().then(() => {
         ] 
        }).then(result => {
         console.log(result.canceled)
-        console.log(result.filePaths)
+        console.log("result.filePaths", result.filePaths)
         if(!result.canceled){
-          fs.readFile(result.filePaths[0], (err, data) => {
-            if (err) throw err;
-            let newState = JSON.parse(data);
-            mainWin.webContents.send('load-scene', newState)
-          });
+          readAndLoadFilePath(result.filePaths[0])
         }
       }).catch(err => {
         console.log(err)
@@ -148,6 +184,7 @@ app.whenReady().then(() => {
         console.log(result.filePath)
         if(!result.canceled){
           mainWin.webContents.send('save-scene', result.filePath)
+          addToRecent(result.filePath)
         }
       }).catch(err => {
         console.log(err)
@@ -203,7 +240,9 @@ app.whenReady().then(() => {
   ipcMain.on('handle-paste', (event, w, h) => {
     handlePaste()
   })
- 
+  ipcMain.on('loaded-state', (event, filePath) => {
+    addToRecent(filePath)
+  })
   ipcMain.on('record-window-size', (event, w, h) => {
     width = mainWin.getSize()[0]
     height = mainWin.getSize()[1]

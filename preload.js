@@ -136,7 +136,7 @@ function percentToCurrentTime(percent, duration){
   return ct
 }
 
-function loadState(loadedState){
+function loadState(loadedState, filePath){
   // file stuff
 
   if(state.mode == 'init')
@@ -149,6 +149,7 @@ function loadState(loadedState){
   for(var i in loadedState.elements){
     addMediaWithPath(loadedState.elements[i].path, loadedState.elements[i].type, loadedState.elements[i])
   }
+  ipcRenderer.send('loaded-state', filePath)
 }
 
 document.addEventListener('keydown', evt => {
@@ -217,8 +218,8 @@ ipcRenderer.on('close-edit-video', (event, newState) =>{
 ipcRenderer.on('edit-video', (event, newState) =>{
   editVideo(getSelected())
 })
-ipcRenderer.on('load-scene', (event, newState) =>{
-  loadState(newState)
+ipcRenderer.on('load-scene', (event, newState, filePath) =>{
+  loadState(newState, filePath)
 })
 ipcRenderer.on('save-scene', (event, filePath) =>{
   var stateCopy = JSON.parse(JSON.stringify(state));

@@ -23,6 +23,7 @@
   "dependencies": {
     "dombo": "^3.2.0",
     "electron-squirrel-startup": "^1.0.0",
+    "electron-store": "^8.0.1",
     "nouislider": "^15.5.0",
     "try-require": "^1.2.1",
     "win-mouse": "^2.0.1"
