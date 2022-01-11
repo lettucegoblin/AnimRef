@@ -8,7 +8,7 @@ const interact = require('./interact.min.js')
 let state = {
   mode: 'init', // 'init', 'standard', 'edit-video'
   editVideo:{
-    backupState: {},
+
   },
   currentScale: 1,
   translate: {
@@ -25,12 +25,13 @@ let videoExample = {
   activeLoopPair: 0
 }
 function closeEditVideo(){
-  videoElement.removeEventListener('timeupdate', onPlayerProgress)
+  //state.editVideo.videoElement.removeEventListener('timeupdate', onPlayerProgress)
   state.mode = 'standard'
   updateScaleAndTranslate(state.editVideo.backupState.currentScale, state.editVideo.backupState.translate)
   state.editVideo.video.element.className = state.editVideo.backupState.elementClasses
   document.querySelector('#root').classList.remove('disableBorder')
   document.querySelector('#editVideoTools').classList.add('hide')
+  state.editVideo = {}
 }
 
 function editVideo(video){
@@ -51,28 +52,60 @@ function editVideo(video){
   video.element.className = "editVideo"
   document.querySelector('#root').classList.add('disableBorder')
   document.querySelector('#editVideoTools').classList.remove('hide')
+  
+  document.getElementById('eventTrigger').dataset.changesliders = JSON.stringify(video.loopPairs[video.activeLoopPair])
 
   if(video.type =='youtube'){
-    videoElement = document.querySelector('.editVideo iframe').contentDocument.querySelector('video')
+    state.editVideo.videoElement = document.querySelector('.editVideo iframe').contentDocument.querySelector('video')
   } else{
-    videoElement = document.querySelector('.editVideo')
+    state.editVideo.videoElement = document.querySelector('.editVideo')
   }
-  videoElement.addEventListener('timeupdate', onPlayerProgress)
+  
+  //state.editVideo.videoElement.addEventListener('timeupdate', onPlayerProgress)
   //
   
   console.log(video)
 }
 
 function onPlayerProgress(e){
+  //am i editvideo?
+  //  handle edit stuff
+  let sliderPositions = document.querySelectorAll('.noUi-handle')
+  let leftSliderPercent = Math.min(sliderPositions[0]['ariaValueText'], sliderPositions[1]['ariaValueText'])
+  let rightSliderPercent = Math.max(sliderPositions[0]['ariaValueText'], sliderPositions[1]['ariaValueText'])
+  //state.editVideo.video
   let sliderElement = document.querySelector('#slider')
   let currentTimePercent = (this.currentTime / this.duration * 100)
+
+  if(this != state.editVideo.videoElement){
+
+    let leftPercent = parseFloat(this.dataset.loopLeft)
+    let rightPercent = parseFloat(this.dataset.loopRight)
+    //console.log('im not edit video',leftPercent, rightPercent)
+    if(leftPercent > currentTimePercent){
+      this.currentTime = percentToCurrentTime(leftPercent, this.duration)
+      currentTimePercent = (this.currentTime / this.duration * 100)
+    }
+    if(rightPercent < currentTimePercent){
+      this.currentTime = percentToCurrentTime(leftPercent, this.duration)
+      currentTimePercent = (this.currentTime / this.duration * 100)
+    }
+    return;
+  } 
+
+  //console.log('im edit video')
+
+  state.editVideo.video.loopPairs[state.editVideo.video.activeLoopPair][0] = leftSliderPercent
+  state.editVideo.video.loopPairs[state.editVideo.video.activeLoopPair][1] = rightSliderPercent
+  this.dataset.loopLeft = leftSliderPercent
+  this.dataset.loopRight = rightSliderPercent
+  
+  //console.log(state.editVideo.video.loopPairs, leftSliderPercent, rightSliderPercent)
+
   if(sliderElement.classList.contains('noUi-state-drag')){
       dragPercent = parseFloat(sliderElement.querySelector('.noUi-active')['ariaValueNow'])
       this.currentTime = percentToCurrentTime(dragPercent, this.duration)
   } else {
-      let sliderPositions = document.querySelectorAll('.noUi-handle')
-      let leftSliderPercent = Math.min(sliderPositions[0]['ariaValueText'], sliderPositions[1]['ariaValueText'])
-      let rightSliderPercent = Math.max(sliderPositions[0]['ariaValueText'], sliderPositions[1]['ariaValueText'])
       if(leftSliderPercent > currentTimePercent){
           this.currentTime = percentToCurrentTime(leftSliderPercent, this.duration)
           currentTimePercent = (this.currentTime / this.duration * 100)
@@ -128,6 +161,7 @@ document.addEventListener('keydown', evt => {
     console.log('Ctrl+V was pressed');
   }
 });
+
 function getSelected(){
   if(document.querySelector('.editVideo')) return {type:'edit-video'}
   let lastIndex = state.elements.length - 1
@@ -202,17 +236,6 @@ ipcRenderer.on('clipboard', (event, msg) => {
     addMediaWithPath(payload[payload.type], "youtube")
   }else
     addMediaWithPath(payload[payload.type])
-  /*
-  if(payload.type == 'filePath'){
-    addMediaWithPath(payload.filePath)
-    //addImageWithPath(payload.filePath)
-  }
-  if(payload.type == 'dataURL'){
-    addMediaWithPath(payload.filePath)
-    //addImageWithPath(payload[payload.type])
-    //URL.createObjectURL(object)
-  }
-  */
 })
 
 function addMediaWithPath(path, type = 'img', loadedState={ x: 0, y: 0, width: null, height: null}){
@@ -251,7 +274,7 @@ function addMediaWithPath(path, type = 'img', loadedState={ x: 0, y: 0, width: n
       var iframeDiv = document.createElement('div')
       iframeDiv.classList.add('iframeDiv')
       mediaElement.appendChild(iframeDiv)
-      document.getElementById('eventTrigger').dataset.trigger = Date.now()
+      document.getElementById('eventTrigger').dataset.youtubetrigger = Date.now()
       /*
       mediaElement.src = 
       `https://www.youtube.com/embed/${code}?` +//&autoplay=1` +
@@ -276,13 +299,24 @@ function addMediaWithPath(path, type = 'img', loadedState={ x: 0, y: 0, width: n
     mediaElement.width = loadedState.width
     mediaElement.height = loadedState.height
   }
-  state.elements.push({
+  let mediaObj = {
     path: path,
     type: type,
     element: mediaElement,
     width: loadedState.width,
     height: loadedState.height
-  })
+  }
+  if(type == 'youtube' || type == 'video'){
+    mediaObj.loopPairs = loadedState.loopPairs || [[0, 100]] // 0% & 100% positions for loop
+    mediaObj.activeLoopPair = loadState.activeLoopPair || 0
+  }
+  
+  state.elements.push(mediaObj)
+  if(type == 'video'){
+    mediaObj.element.dataset.loopLeft = mediaObj.loopPairs[mediaObj.activeLoopPair][0]
+    mediaObj.element.dataset.loopRight = mediaObj.loopPairs[mediaObj.activeLoopPair][1]
+    mediaObj.element.addEventListener('timeupdate', onPlayerProgress)
+  }
 
   itemHolder.appendChild(mediaElement)
 
@@ -345,11 +379,17 @@ contextBridge.exposeInMainWorld('myAPI', {
   updateYoutubeOriginalSize: (idcode, w, h) => {
     for(var i in state.elements){
       if(state.elements[i].type == 'youtube' && extractYoutubeId(state.elements[i].path) == idcode){
+        
         state.elements[i].width = state.elements[i].width || w;
         state.elements[i].height = state.elements[i].height || h;
         
         state.elements[i].element.style.width = state.elements[i].width
         state.elements[i].element.style.height = state.elements[i].height
+
+        let videoElement = state.elements[i].element.querySelector('iframe').contentDocument.querySelector('video');
+        videoElement.dataset.loopLeft = state.elements[i].loopPairs[state.elements[i].activeLoopPair][0]
+        videoElement.dataset.loopRight = state.elements[i].loopPairs[state.elements[i].activeLoopPair][1]
+        videoElement.addEventListener('timeupdate', onPlayerProgress)
         console.log(state.elements[i])
       }
     }

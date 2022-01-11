@@ -79,9 +79,11 @@ function onPlayerStateChange(event) {
 
     let videoWidth = videoElement.videoWidth
     let videoHeight = videoElement.videoHeight
-    console.log(videoWidth, videoHeight)
+    //console.log('inside onPlayerStateChange', videoWidth, videoHeight)
     let idcode = event.target.getIframe().parentElement.dataset.idcode
+    
     videoElement.dataset.idcode = idcode
+    //console.log('after onPlayerStateChange', videoElement.dataset.idcode, videoWidth, videoHeight)
     myAPI.updateYoutubeOriginalSize(idcode, videoWidth, videoHeight)
     //event.target.getIframe().parentElement.style.width = videoWidth + 'px'
     //event.target.getIframe().parentElement.style.height = videoHeight + 'px'
@@ -101,7 +103,15 @@ const callback = function(mutationsList, observer) {
         }
         else if (mutation.type === 'attributes') {
             console.log('The ' + mutation.attributeName + ' attribute was modified.');
-            embedYoutubeVideo()
+            if(mutation.attributeName == 'data-youtubetrigger'){
+                embedYoutubeVideo()
+            } else if(mutation.attributeName == 'data-changesliders'){
+                //console.log(mutation)
+                //
+                let changesliders = JSON.parse(mutation.target.dataset.changesliders)
+                slider.noUiSlider.set(changesliders);
+            }
+            
         }
     }
 };
@@ -110,9 +120,13 @@ const observer = new MutationObserver(callback);
 observer.observe(targetNode, config);
 function embedYoutubeVideo(){
     var playerNeedsSetup = document.querySelector('.playerNeedsSetup');
+    if(!playerNeedsSetup) {
+        console.error('embedYoutubeVideo called without player div to setup')
+    };
+    playerNeedsSetup.classList.remove('playerNeedsSetup')
     var iframediv = playerNeedsSetup.querySelector('.iframeDiv')
     var code = playerNeedsSetup.dataset.idcode
-    playerNeedsSetup.classList.remove('playerNeedsSetup')
+    
     //document.querySelector()
     player = new YT.Player(iframediv, {
         videoId: code,
