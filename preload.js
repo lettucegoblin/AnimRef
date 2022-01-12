@@ -1,6 +1,7 @@
 const {
   ipcRenderer, 
-  contextBridge 
+  contextBridge, 
+  ipcMain
 } = require('electron')
 
 
@@ -544,3 +545,9 @@ function forceRedraw(){
     document.body.parentElement.style.backgroundColor = ''
   }
 }
+
+
+window.addEventListener('load', (event) => {
+  console.log('page is fully loaded');
+  ipcRenderer.send('ready')
+});

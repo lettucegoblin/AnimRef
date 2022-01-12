@@ -114,17 +114,22 @@ app.whenReady().then(() => {
   function addToRecent(filePath){
     var recent = JSON.parse(store.get('recent') || "[]")
     console.log("addToRecent", store.get('recent'), filePath)
-    
-    if(recent.indexOf(filePath) != -1) return
+    let index = recent.indexOf(filePath)
+    let exists = index != -1
+    if(exists) {
+      recent.splice(index, 1)
+    }
     recent.push(filePath)
     store.set('recent', JSON.stringify(recent));
     console.log("addedToRecent", store.get('recent'), filePath)
-    recentSubmenu.append(new MenuItem({ 
-      label: filePath,
-      click: (menuItem, browserWindow, event) => {
-        readAndLoadFilePath(menuItem.label)
-      }
-    }))
+    if(!exists){
+      recentSubmenu.append(new MenuItem({ 
+        label: filePath,
+        click: (menuItem, browserWindow, event) => {
+          readAndLoadFilePath(menuItem.label)
+        }
+      }))
+    }
   }
   function populateRecent(){
     var recent = JSON.parse(store.get('recent') || "[]")
@@ -138,6 +143,12 @@ app.whenReady().then(() => {
       }))
     }
   }
+  function loadMostRecent(){
+    var recent = JSON.parse(store.get('recent') || "[]")
+    if(recent.length > 0)
+      readAndLoadFilePath(recent[recent.length - 1])
+  }
+
   contextMenu.append(new MenuItem({ type: 'separator' }))
   
   function readAndLoadFilePath(filePath){
@@ -204,6 +215,7 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow()
+      
     }
   })
 
@@ -214,7 +226,9 @@ app.whenReady().then(() => {
       menu.popup(win, params.x, params.y)
     })
   })
-  
+  ipcMain.on('ready', (event, menuType) => {
+    loadMostRecent()
+  });
   ipcMain.on('show-context-menu', (event, menuType) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     console.log(menuType)
