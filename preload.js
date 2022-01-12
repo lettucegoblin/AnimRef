@@ -174,43 +174,46 @@ function getSelected(){
 document.addEventListener('contextmenu', (e) => {
   e.preventDefault()
   console.log(state)
-  if(mouseObj.dragToggle) {
-    mouseObj.dragToggle = false; 
+  if(mouseObj.dragging) {
+    mouseObj.dragging = false; 
     return;
   }
   
-  ipcRenderer.send('show-context-menu', getSelected()?.type || "void")
+  
 })
 let mouseObj = {
   initPos: null,
   initClientPos: null,
-  dragToggle: false,
+  dragging: false,
   //time dragging & distance dragged
 }
 document.addEventListener('mousedown', (e) => {
   mouseObj.initPos = {x: e.clientX, y: e.clientY}
   mouseObj.initClientPos = {x: e.screenX, y: e.screenY}
   ipcRenderer.send('record-window-size', window.innerHeight, window.innerHeight)
-  mouseObj.dragToggle = false
+  mouseObj.dragging = false
 })
 document.addEventListener('mousemove', (e) => {
   if(e.buttons == 2){
       ipcRenderer.send('move-electron-window', e.screenX, e.screenY, mouseObj.initPos)
-      mouseObj.dragToggle = true;
+      mouseObj.dragging = true;
       
   }
 })
 document.addEventListener('mouseup', (e) => {
-  if(mouseObj.dragToggle){
+  if(mouseObj.dragging){
     distance = Math.sqrt(
                 Math.pow(e.screenX - mouseObj.initClientPos.x, 2) 
                 +
                 Math.pow(e.screenY - mouseObj.initClientPos.y, 2) );
-
+    console.log(distance)
     if(distance < 4){ 
-      mouseObj.dragToggle = false;
+      mouseObj.dragging = false;
+      ipcRenderer.send('show-context-menu', getSelected()?.type || "void")
     }
 
+  } else{
+    ipcRenderer.send('show-context-menu', getSelected()?.type || "void")
   }
 })
 ipcRenderer.on('close-edit-video', (event, newState) =>{

@@ -223,7 +223,7 @@ app.whenReady().then(() => {
 
   app.on('browser-window-created', (event, win) => {
     win.webContents.on('context-menu', (e, params) => {
-      menu.popup(win, params.x, params.y)
+      //menu.popup(win, params.x, params.y)
     })
   })
   ipcMain.on('ready', (event, menuType) => {
