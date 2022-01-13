@@ -201,19 +201,24 @@ document.addEventListener('mousemove', (e) => {
   }
 })
 document.addEventListener('mouseup', (e) => {
-  if(mouseObj.dragging){
-    distance = Math.sqrt(
-                Math.pow(e.screenX - mouseObj.initClientPos.x, 2) 
-                +
-                Math.pow(e.screenY - mouseObj.initClientPos.y, 2) );
-    console.log(distance)
-    if(distance < 4){ 
+  console.log(e.button, mouseObj.dragging)
+  if(e.button == 2){
+    if(mouseObj.dragging){
+      
+      distance = Math.sqrt(
+                  Math.pow(e.screenX - mouseObj.initClientPos.x, 2) 
+                  +
+                  Math.pow(e.screenY - mouseObj.initClientPos.y, 2) );
+      console.log(distance)
+      if(distance < 4){ 
+        
+        ipcRenderer.send('show-context-menu', getSelected()?.type || "void")
+      }
       mouseObj.dragging = false;
+
+    } else{
       ipcRenderer.send('show-context-menu', getSelected()?.type || "void")
     }
-
-  } else{
-    ipcRenderer.send('show-context-menu', getSelected()?.type || "void")
   }
 })
 ipcRenderer.on('close-edit-video', (event, newState) =>{
