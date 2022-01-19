@@ -154,6 +154,9 @@ function loadState(loadedState, filePath){
 }
 
 document.addEventListener('keydown', evt => {
+  mouseObj.keys[evt.key] = true
+
+  
   if(evt.key === 'Delete'){
     
     console.log('delete selected')
@@ -161,8 +164,26 @@ document.addEventListener('keydown', evt => {
   } else if (evt.key === 'v' && evt.ctrlKey) {
     ipcRenderer.send('handle-paste')
     console.log('Ctrl+V was pressed');
+  } else if (evt.key === ' ' && evt.ctrlKey) {
+    mouseObj.ctrlSpace = true;
+    console.log('Ctrl+space was pressed');
+  } else if(evt.key === ' '){
+    mouseObj.space = true;
   }
 });
+
+document.addEventListener('keyup', evt => {
+  mouseObj.keys[evt.key] = false
+  console.log('keyup', evt.key);
+  if (evt.key === ' ' || evt.key == 'Control') {
+    mouseObj.ctrlSpace = false;
+    console.log('Ctrl+space was released');
+    if(evt.key === ' '){
+      mouseObj.space = false;
+    }
+  }
+  
+})
 
 function getSelected(){
   if(document.querySelector('.editVideo')) return {type:'edit-video'}
@@ -185,21 +206,66 @@ let mouseObj = {
   initPos: null,
   initClientPos: null,
   dragging: false,
+  ctrlSpace: false,
+  space: false,
+  keys: new Object(),
   //time dragging & distance dragged
 }
 document.addEventListener('mousedown', (e) => {
   mouseObj.initPos = {x: e.clientX, y: e.clientY}
   mouseObj.initClientPos = {x: e.screenX, y: e.screenY}
+  mouseObj.initTranslate = {x: (parseFloat(document.body.dataset.translateX) || 0), y: (parseFloat(document.body.dataset.translateY) || 0)}
   ipcRenderer.send('record-window-size', window.innerHeight, window.innerHeight)
   mouseObj.dragging = false
 })
 document.addEventListener('mousemove', (e) => {
-  if(e.buttons == 2){
+  
+  if( e.buttons == 1 && mouseObj.keys[' '] && mouseObj.keys['Control']){
+    //console.log(`handleZoom(${e.movementX})`);
+    
+    handleZoom(e.movementX, mouseObj.initPos.x, mouseObj.initPos.y)
+    e.preventDefault()
+  } else if( e.buttons == 1 && mouseObj.space){
+    
+    handleMove(e.movementX , e.movementY)
+
+  } else if(e.buttons == 2){
       ipcRenderer.send('move-electron-window', e.screenX, e.screenY, mouseObj.initPos)
       mouseObj.dragging = true;
       
   }
+  
 })
+function handleMove(dX, dY){
+  currentScale = parseFloat(document.body.dataset.currentScale) || 1
+
+  
+  let translateX = (parseFloat(document.body.dataset.translateX) || 0);
+  let translateY = (parseFloat(document.body.dataset.translateY) || 0);//(parseFloat(document.body.dataset.translateY) || 0);
+  translateX += dX
+  translateY += dY //- mouseObj.initTranslate.y 
+
+  updateScaleAndTranslate(currentScale, {translateX, translateY})
+}
+
+function handleZoom(_delta, clientX, clientY){
+  if(document.querySelector('.editVideo')) return;
+  currentScale = parseFloat(document.body.dataset.currentScale) || 1
+  let delta = _delta/120
+  
+  const nextScale = Math.max(currentScale + delta * (currentScale / 2), 0.01)
+  const ratio = 1 - nextScale / currentScale
+  let translateX = (parseFloat(document.body.dataset.translateX) || 0);
+  let translateY = (parseFloat(document.body.dataset.translateY) || 0);
+
+  translateX += (clientX - translateX) * ratio
+  translateY += (clientY - translateY) * ratio
+
+  
+  currentScale = nextScale
+  updateScaleAndTranslate(currentScale, {translateX, translateY})
+  //zoom(nextScale, e)
+}
 document.addEventListener('mouseup', (e) => {
   console.log(e.button, mouseObj.dragging)
   if(e.button == 2){
@@ -420,7 +486,14 @@ interact('.draggable')
     //
     event.preventDefault()
   })
-
+function isMouseInBlockingState(){
+  if(mouseObj.keys[' '] && mouseObj.keys['Control']){
+    return true
+  } else if(mouseObj.keys[' ']){
+    return true
+  }
+  return false
+}
 interact('.selectedItem').resizable({
   // resize from all edges and corners
   //allowFrom: '.selectedItem',
@@ -429,6 +502,7 @@ interact('.selectedItem').resizable({
   enabled: true,
   listeners: [{
     move (event) {
+      if(isMouseInBlockingState()) return;
       var target = event.target
       //handleSelected(target, true)
       setTransformForElement(target.dataset.zIndex, event.deltaRect.left, event.deltaRect.top, event.rect.width, event.rect.height)
@@ -451,6 +525,7 @@ interact('.selectedItem').resizable({
   listeners: { move: dragMoveListener },
   inertia: false
 }).on('tap', function (event) {
+  
   var target = event.target
   handleSelected(target)
   //
@@ -475,6 +550,7 @@ function clearAllSelected(){
   })
 }
 function handleSelected(target, dragging = false){
+  if(isMouseInBlockingState()) return;
   /*
   var isSelected = target.classList.contains('selectedItem')
   
@@ -505,6 +581,7 @@ function handleSelected(target, dragging = false){
 }
 
 function dragMoveListener (event) {
+  if(isMouseInBlockingState()) return;
   var target = event.target
   handleSelected(target, true)
   setTransformForElement(target.dataset.zIndex, event.dx, event.dy)

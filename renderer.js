@@ -17,13 +17,14 @@ const factor = 0.1
 document.documentElement.addEventListener("wheel", (e) => {
     if(document.querySelector('.editVideo')) return;
     currentScale = parseFloat(document.body.dataset.currentScale) || 1
-    let delta = event.wheelDelta/120
+    let delta = e.wheelDelta/120
     
     const nextScale = Math.max(currentScale + delta * (currentScale / 2), 0.01)
     console.log(delta, currentScale, nextScale)
     zoom(nextScale, e)
 
 })
+
 const zoom = (nextScale, event) => {
     currentScale = parseFloat(document.body.dataset.currentScale) || 1
 
