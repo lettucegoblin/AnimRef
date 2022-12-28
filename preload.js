@@ -151,7 +151,8 @@ function loadState(loadedState, filePath){
   document.getElementById('itemHolder').innerHTML = ''
 
   updateScaleAndTranslate(loadedState.currentScale, loadedState.translate)
-
+  refreshWorkspace()
+  initWorkspace()
   state.elements = []
   for(var i in loadedState.elements){
     addMediaWithPath(loadedState.elements[i].path, loadedState.elements[i].type, loadedState.elements[i])
@@ -327,6 +328,11 @@ function addMediaWithPath(path, type = 'img', loadedState={ x: 0, y: 0, width: n
   let mediaElement = undefined
   if(type =='img'){
     mediaElement = document.createElement('img')
+    mediaElement.addEventListener('load', function loaded(){
+      let {x, y, width, height} = this.getClientRects()[0]
+      resizeWorkspaceToFitObj(loadedState.x, loadedState.y, width, height)
+
+    })
     mediaElement.src = path;
   } else if(type == 'video'){
     mediaElement = document.createElement('video')
@@ -469,12 +475,6 @@ function clampWorkspaceTranslate(ratio, newTranslate){
     translateY = windowHeight - (state.workspaceRect.y1 * ratio) 
   }
   return {translateX:translateX, translateY:translateY}
-  //Clamp inside workspace
-  // if workspace is off screen
-  // if workspace to left then clientX becomes workspace x2
-  // if workspace to right then clientX becomes workspace x1
-  // if workspace to top then clientY becomes workspace y1
-  // if workspace to bottom then clienty becomes workspace y2
 }
 
 function updateScaleAndTranslate(newScale, newTranslate){
@@ -619,18 +619,31 @@ function dragMoveListener (event) {
 }
 
 function resizeWorkspaceToFitObj(x, y, width, height){
+  if( width == 0 || height == 0) return
   state.workspaceRect.x1 = Math.min(x, state.workspaceRect.x1)
   state.workspaceRect.y1 = Math.min(y, state.workspaceRect.y1)
   
   state.workspaceRect.x2 = Math.max(x + width, state.workspaceRect.x2)
   state.workspaceRect.y2 = Math.max(y + height, state.workspaceRect.y2)
+  refreshWorkspace()
+}
 
-  console.log("workspaceRect", state.workspaceRect, width, height)
+function initWorkspace(){
+  state.workspaceRect = {
+    x1: 0,
+    y1: 0,
+    x2: 0,
+    y2: 0
+  }
+}
+
+function refreshWorkspace(){
   const element = document.getElementById('workspaceBox');
   element.style.left = state.workspaceRect.x1 + "px";
   element.style.top = state.workspaceRect.y1 + "px";
   element.style.width = (state.workspaceRect.x2 - state.workspaceRect.x1) + "px"
   element.style.height = (state.workspaceRect.y2 - state.workspaceRect.y1) + "px"
+
 }
 
 function setTransformForElement(elementIndex, dx = 0, dy = 0, width = null, height = null){
