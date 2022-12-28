@@ -20,7 +20,7 @@ document.documentElement.addEventListener("wheel", (e) => {
     let delta = e.wheelDelta/120
     
     const nextScale = Math.max(currentScale + delta * (currentScale / 2), 0.01)
-    console.log(delta, currentScale, nextScale)
+    //console.log(delta, currentScale, nextScale)
     zoom(nextScale, e)
 
 })

@@ -211,16 +211,16 @@ app.whenReady().then(() => {
 
   Menu.setApplicationMenu(contextMenu)
 
-  //mainWin.webContents.openDevTools()
+  if(process.argv.indexOf("debug") > -1)
+    mainWin.webContents.openDevTools()
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow()
       
     }
   })
-
-
-
+  
   app.on('browser-window-created', (event, win) => {
     win.webContents.on('context-menu', (e, params) => {
       //menu.popup(win, params.x, params.y)

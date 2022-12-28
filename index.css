@@ -49,6 +49,11 @@ h1, p{
 #welcome p{
     margin-top: 12px;
 }
+#workspaceBox{
+    position: absolute;
+    background-color: #2a2a2a;
+    z-index: -1;
+}
 #itemHolder{
     height: 100%;
     width: 100%;

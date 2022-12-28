@@ -18,7 +18,13 @@ let state = {
   },
   elements: [
 
-  ]
+  ],
+  workspaceRect: {
+    x1: 0,
+    y1: 0,
+    x2: 0,
+    y2: 0
+  }
 }
 
 let videoExample = {
@@ -251,7 +257,7 @@ function handleMove(dX, dY){
 function handleZoom(_delta, clientX, clientY){
   if(document.querySelector('.editVideo')) return;
   currentScale = parseFloat(document.body.dataset.currentScale) || 1
-  let delta = _delta/120
+  let delta = _delta / 60
   
   const nextScale = Math.max(currentScale + delta * (currentScale / 2), 0.01)
   const ratio = 1 - nextScale / currentScale
@@ -260,7 +266,6 @@ function handleZoom(_delta, clientX, clientY){
 
   translateX += (clientX - translateX) * ratio
   translateY += (clientY - translateY) * ratio
-
   
   currentScale = nextScale
   updateScaleAndTranslate(currentScale, {translateX, translateY})
@@ -439,7 +444,45 @@ function extractYoutubeId(path){
   return capture[7]
 }
 
+function clampWorkspaceTranslate(ratio, newTranslate){
+  let {translateX, translateY} = newTranslate
+
+  let windowElement = document.getElementById('root')
+  let windowWidth = windowElement.clientWidth 
+  let windowHeight = windowElement.clientHeight
+
+  if(-(translateX) > state.workspaceRect.x2 * ratio){ //workspace off screen to left
+    console.log('workspace off screen to left')
+    translateX = -(state.workspaceRect.x2 * ratio)
+  }
+  else if((translateX) + (state.workspaceRect.x1 * ratio) > windowWidth){ // workspace off screen to right
+    console.log('workspace off screen to right')
+    translateX = windowWidth - (state.workspaceRect.x1 * ratio) 
+  }
+
+  if(-(translateY) > state.workspaceRect.y2 * ratio){ // workspace off screen to top
+    console.log('workspace off screen to top')
+    translateY = -(state.workspaceRect.y2 * ratio) 
+  }
+  else if((translateY) + (state.workspaceRect.y1 * ratio) > windowHeight){ // workspace off screen to bottom
+    console.log('workspace off screen to bottom')
+    translateY = windowHeight - (state.workspaceRect.y1 * ratio) 
+  }
+  return {translateX:translateX, translateY:translateY}
+  //Clamp inside workspace
+  // if workspace is off screen
+  // if workspace to left then clientX becomes workspace x2
+  // if workspace to right then clientX becomes workspace x1
+  // if workspace to top then clientY becomes workspace y1
+  // if workspace to bottom then clienty becomes workspace y2
+}
+
 function updateScaleAndTranslate(newScale, newTranslate){
+  if(newScale > 2){
+    state.currentScale = 2
+    return;
+  }
+  newTranslate = clampWorkspaceTranslate(newScale, newTranslate)
   state.currentScale = newScale
   state.translate = newTranslate
   document.body.style.transform = `translate(${state.translate.translateX}px, ${state.translate.translateY}px) scale(${state.currentScale})`
@@ -481,7 +524,7 @@ interact('.draggable')
     inertia: false
   }).on('tap', function (event) {
     var target = event.target
-    console.log(objPlayground)
+
     handleSelected(target)
     //
     event.preventDefault()
@@ -551,20 +594,7 @@ function clearAllSelected(){
 }
 function handleSelected(target, dragging = false){
   if(isMouseInBlockingState()) return;
-  /*
-  var isSelected = target.classList.contains('selectedItem')
-  
-  if(!dragging){
-    clearAllSelected()
-  }
-  if(!isSelected){
-    if(dragging){
-      clearAllSelected()
-      
-    }
-    target.classList.remove('draggable')
-    target.classList.add('selectedItem')
-  }*/
+
   clearAllSelected()
   target.classList.remove('draggable')
   target.classList.add('selectedItem')
@@ -585,29 +615,29 @@ function dragMoveListener (event) {
   var target = event.target
   handleSelected(target, true)
   setTransformForElement(target.dataset.zIndex, event.dx, event.dy)
-  /*
-  // keep the dragged position in the data-x/data-y attributes
-  var x = (parseFloat(target.getAttribute('data-x')) || 0) + (event.dx / state.currentScale) //+ (state.translate.translateX / state.currentScale)
-  var y = (parseFloat(target.getAttribute('data-y')) || 0) + (event.dy / state.currentScale) //+ (state.translate.translateY / state.currentScale)
-  //x = x / state.currentScale
-  //y = y / state.currentScale
-
-  // translate the element
-  target.style.transform = 'translate(' + x + 'px, ' + y + 'px)'
-
-  // update the posiion attributes
-  target.setAttribute('data-x', x)
-  target.setAttribute('data-y', y)
-  state.elements[target.dataset.zIndex].x = x
-  state.elements[target.dataset.zIndex].y = y
-  */
   forceRedraw()
+}
+
+function resizeWorkspaceToFitObj(x, y, width, height){
+  state.workspaceRect.x1 = Math.min(x, state.workspaceRect.x1)
+  state.workspaceRect.y1 = Math.min(y, state.workspaceRect.y1)
+  
+  state.workspaceRect.x2 = Math.max(x + width, state.workspaceRect.x2)
+  state.workspaceRect.y2 = Math.max(y + height, state.workspaceRect.y2)
+
+  console.log("workspaceRect", state.workspaceRect, width, height)
+  const element = document.getElementById('workspaceBox');
+  element.style.left = state.workspaceRect.x1 + "px";
+  element.style.top = state.workspaceRect.y1 + "px";
+  element.style.width = (state.workspaceRect.x2 - state.workspaceRect.x1) + "px"
+  element.style.height = (state.workspaceRect.y2 - state.workspaceRect.y1) + "px"
 }
 
 function setTransformForElement(elementIndex, dx = 0, dy = 0, width = null, height = null){
   let elementObj = state.elements[elementIndex]
   let x = (parseFloat(elementObj.element.dataset.x) || 0) + (dx / state.currentScale)
   let y = (parseFloat(elementObj.element.dataset.y) || 0) + (dy / state.currentScale)
+  
   elementObj.element.setAttribute('data-x', x)
   elementObj.element.setAttribute('data-y', y)
   elementObj.x = x
@@ -619,7 +649,9 @@ function setTransformForElement(elementIndex, dx = 0, dy = 0, width = null, heig
     elementObj.element.style.width = width / state.currentScale + 'px'
     elementObj.element.style.height = height / state.currentScale + 'px'
   }
-
+  
+  resizeWorkspaceToFitObj(x, y, elementObj.width || elementObj.element.width, elementObj.height || elementObj.element.height)
+  
   elementObj.element.style.transform = 'translate(' + x + 'px, ' + y + 'px)'
 }
 
