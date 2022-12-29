@@ -1,3 +1,6 @@
+:root {
+    --scale: 1;
+}
 html{
     border: #0c0c0c solid 1px;
     transform-origin: 0 0;
@@ -59,9 +62,9 @@ h1, p{
     width: 100%;
 }
 .selectedItem{
-    outline: 3px solid rgb(37 157 199);
+    outline:  calc(0.15rem / var(--scale)) solid rgb(37 157 199)
 }
-.selectedItem.resizeItem{
+.selectedItem.resizeItem{ 
 
 }
 #itemHolder > *{

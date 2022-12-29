@@ -27,6 +27,8 @@ let state = {
   }
 }
 
+
+
 let videoExample = {
   loopPairs: [[0, 119], [44, 56]], // can derive A, B, C & color coding from index
   activeLoopPair: 0
@@ -431,7 +433,7 @@ function init(){
     var target = event.target
     //console.log('click', target)
     
-    if(target.id == 'root'){
+    if(target.id == 'root' || target.id == 'workspaceBox'){
       console.log('background click')
       clearAllSelected()
     }
@@ -482,6 +484,7 @@ function updateScaleAndTranslate(newScale, newTranslate){
     state.currentScale = 2
     return;
   }
+  
   newTranslate = clampWorkspaceTranslate(newScale, newTranslate)
   state.currentScale = newScale
   state.translate = newTranslate
@@ -489,9 +492,11 @@ function updateScaleAndTranslate(newScale, newTranslate){
   document.body.dataset.currentScale = state.currentScale
   document.body.dataset.translateX = state.translate.translateX
   document.body.dataset.translateY = state.translate.translateY
-
+  const ROOTCSS = document.querySelector(':root');
+  ROOTCSS.style.setProperty('--scale', newScale);
   //window.currentScale = state.currentScale;
 }
+
 let objPlayground = {hi:'yo'};
 contextBridge.exposeInMainWorld('myAPI', {
   updateScaleAndTranslate: updateScaleAndTranslate,
