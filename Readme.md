@@ -6,5 +6,5 @@ This is a remake/clone of pureRef, a program that allows you to view images on t
 ![second preview](github_page/2.gif)
 
 # How to use
-Download from releases here: ![Releases](pureref-gif-support/releases/tag/release)
+Download from releases here: ![Releases]([pureref-gif-support/releases/tag/release](https://github.com/lettucegoblin/pureref-gif-support/releases/tag/release)https://github.com/lettucegoblin/pureref-gif-support/releases/tag/release)
 
