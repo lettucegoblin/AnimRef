@@ -145,17 +145,29 @@ function percentToCurrentTime(percent, duration){
   return ct
 }
 
+function newScene(){
+  document.getElementById('itemHolder').innerHTML = ''
+  updateScaleAndTranslate(1, {
+    translateX: 0,
+    translateY: 0
+  });
+  initWorkspace()
+  refreshWorkspace()
+  
+  state.elements = []
+  document.querySelector('#welcome').classList.remove("hide")
+}
+
 function loadState(loadedState, filePath){
   // file stuff
 
   if(state.mode == 'init')
     init();
-  document.getElementById('itemHolder').innerHTML = ''
+  
 
+  newScene()
   updateScaleAndTranslate(loadedState.currentScale, loadedState.translate)
-  refreshWorkspace()
-  initWorkspace()
-  state.elements = []
+
   for(var i in loadedState.elements){
     addMediaWithPath(loadedState.elements[i].path, loadedState.elements[i].type, loadedState.elements[i])
   }
@@ -301,6 +313,9 @@ ipcRenderer.on('close-edit-video', (event, newState) =>{
 ipcRenderer.on('edit-video', (event, newState) =>{
   editVideo(getSelected())
 })
+ipcRenderer.on('new-scene', (event) =>{
+  newScene()
+})
 ipcRenderer.on('load-scene', (event, newState, filePath) =>{
   loadState(newState, filePath)
 })
@@ -324,7 +339,8 @@ ipcRenderer.on('clipboard', (event, msg) => {
 
 function addMediaWithPath(path, type = 'img', loadedState={ x: 0, y: 0, width: null, height: null}){
   if(state.mode == 'init') init();
-  document.querySelector('#welcome') && document.querySelector('#welcome').remove()
+  if(!document.querySelector('#welcome').classList.contains("hide"))
+    document.querySelector('#welcome').classList.add("hide");
   let itemHolder = document.getElementById('itemHolder')
 
   let mediaElement = undefined
