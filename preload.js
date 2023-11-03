@@ -229,6 +229,7 @@ document.addEventListener('mousedown', (e) => {
 })
 document.addEventListener('mousemove', (e) => {
   
+  // ctrl + space + mouse drag = zoom 
   if( e.buttons == 1 && mouseObj.keys[' '] && mouseObj.keys['Control']){
     //console.log(`handleZoom(${e.movementX})`);
     
