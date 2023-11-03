@@ -8,16 +8,15 @@ const addEvent = function (el, type, fn) {
   if (el.addEventListener)
     el.addEventListener(type, fn, false);
   else
-    el.attachEvent('on'+type, fn);
+    el.attachEvent('on' + type, fn);
 };
 
-const extend = function(obj,ext){
-  for(var key in ext)
-    if(ext.hasOwnProperty(key))
+const extend = function (obj, ext) {
+  for (var key in ext)
+    if (ext.hasOwnProperty(key))
       obj[key] = ext[key];
   return obj;
 };
-
 
 const interact = require('./interact.min.js')
 let state = {
@@ -40,8 +39,6 @@ let state = {
     y2: 0
   }
 }
-
-
 
 let videoExample = {
   loopPairs: [[0, 119], [44, 56]], // can derive A, B, C & color coding from index
@@ -350,15 +347,27 @@ ipcRenderer.on('clipboard', (event, msg) => {
   } else
     addMediaWithPath(payload[payload.type], payload.type)
 })
+function getCenterOfWindowScaled() {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
 
-function addMediaWithPath(path, type = 'img', loadedState = { x: 0, y: 0, width: null, height: null }) {
+  const widthScaled = (width / 2) / state.currentScale;
+  const heightScaled = (height / 2) / state.currentScale;
+  return {
+    centerX: (-state.translate.translateX / state.currentScale) + widthScaled,
+    centerY: (-state.translate.translateY / state.currentScale) + heightScaled
+  };
+}
+function addMediaWithPath(path, type = 'img', loadedState) {
+  isNewElement = loadedState == null
+  loadedState = loadedState || { x: 0, y: 0, width: null, height: null }
   if (state.mode == 'init') init();
   if (!document.querySelector('#welcome').classList.contains("hide"))
     document.querySelector('#welcome').classList.add("hide");
   let itemHolder = document.getElementById('itemHolder')
 
   let mediaElement = undefined
-  if (type == 'img') {
+  if (type == 'img' || type == 'dataURL' || type == 'filePath') {
     mediaElement = document.createElement('img')
     mediaElement.addEventListener('load', function loaded() {
       let { x, y, width, height } = this.getClientRects()[0]
@@ -406,9 +415,33 @@ function addMediaWithPath(path, type = 'img', loadedState = { x: 0, y: 0, width:
   } else if (type == "text") {
     mediaElement = document.createElement('div')
     mediaElement.classList.add('textElement')
-    mediaElement.innerHTML = path
-    mediaElement.style.width = (loadedState.width || 100) + "px";
-    mediaElement.style.height = (loadedState.height || 50) + "px";
+    mediaElement.innerText = path
+
+
+    if (isNewElement) {
+      scaledFontSize = 24 / state.currentScale
+      mediaElement.style.fontSize = scaledFontSize + 'px'
+      mediaElement.style.opacity = 0
+      document.body.appendChild(mediaElement)
+      let { x, y, width:widthOnDom, height:heightOnDom } = mediaElement.getClientRects()[0]
+      
+      document.body.removeChild(mediaElement)
+      mediaElement.style.opacity = 1
+      mediaElement.style.fontSize = undefined
+      mediaElement.style.width = widthOnDom + "px";
+      mediaElement.style.height = heightOnDom + "px";
+
+      let centerWin = getCenterOfWindowScaled();
+
+      let mediaElementScaledWidth = (mediaElement.style.width.replace('px', '') / state.currentScale);
+      let mediaElementScaledHeight = (mediaElement.style.height.replace('px', '') / state.currentScale);
+      loadedState.x = centerWin.centerX - mediaElementScaledWidth / 2
+      loadedState.y = centerWin.centerY - mediaElementScaledHeight / 2
+    } else {
+      mediaElement.style.width = loadedState.width + "px";
+      mediaElement.style.height = loadedState.height + "px";
+    }
+
   } else {
     alert('unsupported media type')
     return;
@@ -444,14 +477,14 @@ function addMediaWithPath(path, type = 'img', loadedState = { x: 0, y: 0, width:
   }
 
   itemHolder.appendChild(mediaElement)
-  
+
   setTransformForElement(zIndex)
-  if(type == 'text'){
+  if (type == 'text') {
     adjustFontSize(mediaElement)
   }
 }
 function adjustFontSize(element) {
-  const fontSize = element.offsetWidth / 3;
+  const fontSize = (element.offsetWidth / 3) / state.currentScale;
   element.style.fontSize = `${fontSize}px`;
   console.log(element.offsetWidth, fontSize)
 }
@@ -598,9 +631,9 @@ interact('.selectedItem').resizable({
       var target = event.target
       //handleSelected(target, true)
       console.log('resize')
-      
-      if(target.classList.contains('textElement')){
-        adjustFontSize( target )
+
+      if (target.classList.contains('textElement')) {
+        adjustFontSize(target)
       }
       setTransformForElement(target.dataset.zIndex, event.deltaRect.left, event.deltaRect.top, event.rect.width, event.rect.height)
       forceRedraw()
