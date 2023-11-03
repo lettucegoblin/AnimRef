@@ -106,8 +106,9 @@ app.whenReady().then(() => {
         payload.type = 'filePath'
         payload.filePath = potentialUrl
       } else {
-        console.log('not a url')
-        return
+        // paste as text element
+        payload.type = 'text'
+        payload.text = clipboard.readText()
       }
     }
 

@@ -4,6 +4,20 @@ const {
   ipcMain
 } = require('electron')
 
+const addEvent = function (el, type, fn) {
+  if (el.addEventListener)
+    el.addEventListener(type, fn, false);
+  else
+    el.attachEvent('on'+type, fn);
+};
+
+const extend = function(obj,ext){
+  for(var key in ext)
+    if(ext.hasOwnProperty(key))
+      obj[key] = ext[key];
+  return obj;
+};
+
 
 const interact = require('./interact.min.js')
 let state = {
@@ -334,7 +348,7 @@ ipcRenderer.on('clipboard', (event, msg) => {
   if (/youtube.com\/.*v=([^\?]*)/.test(payload[payload.type])) {
     addMediaWithPath(payload[payload.type], "youtube")
   } else
-    addMediaWithPath(payload[payload.type])
+    addMediaWithPath(payload[payload.type], payload.type)
 })
 
 function addMediaWithPath(path, type = 'img', loadedState = { x: 0, y: 0, width: null, height: null }) {
@@ -389,6 +403,12 @@ function addMediaWithPath(path, type = 'img', loadedState = { x: 0, y: 0, width:
       mediaElement.allowFullscreen = false;
       */
     }
+  } else if (type == "text") {
+    mediaElement = document.createElement('div')
+    mediaElement.classList.add('textElement')
+    mediaElement.innerHTML = path
+    mediaElement.style.width = (loadedState.width || 100) + "px";
+    mediaElement.style.height = (loadedState.height || 50) + "px";
   } else {
     alert('unsupported media type')
     return;
@@ -413,7 +433,7 @@ function addMediaWithPath(path, type = 'img', loadedState = { x: 0, y: 0, width:
   }
   if (type == 'youtube' || type == 'video') {
     mediaObj.loopPairs = loadedState.loopPairs || [[0, 100]] // 0% & 100% positions for loop
-    mediaObj.activeLoopPair = loadState.activeLoopPair || 0
+    mediaObj.activeLoopPair = loadedState.activeLoopPair || 0
   }
 
   state.elements.push(mediaObj)
@@ -424,10 +444,17 @@ function addMediaWithPath(path, type = 'img', loadedState = { x: 0, y: 0, width:
   }
 
   itemHolder.appendChild(mediaElement)
-
+  
   setTransformForElement(zIndex)
+  if(type == 'text'){
+    adjustFontSize(mediaElement)
+  }
 }
-
+function adjustFontSize(element) {
+  const fontSize = element.offsetWidth / 3;
+  element.style.fontSize = `${fontSize}px`;
+  console.log(element.offsetWidth, fontSize)
+}
 document.addEventListener('drop', (event) => {
   event.preventDefault();
   event.stopPropagation();
@@ -542,7 +569,7 @@ contextBridge.exposeInMainWorld('myAPI', {
 interact('.draggable')
   .draggable({
     listeners: { move: dragMoveListener },
-    inertia: false
+    inertia: false,
   }).on('tap', function (event) {
     var target = event.target
 
@@ -564,11 +591,17 @@ interact('.selectedItem').resizable({
   edges: { left: true, right: true, bottom: true, top: true },
   ratio: 1,
   enabled: true,
+  margin: 4,
   listeners: [{
     move(event) {
       if (isMouseInBlockingState()) return;
       var target = event.target
       //handleSelected(target, true)
+      console.log('resize')
+      
+      if(target.classList.contains('textElement')){
+        adjustFontSize( target )
+      }
       setTransformForElement(target.dataset.zIndex, event.deltaRect.left, event.deltaRect.top, event.rect.width, event.rect.height)
       forceRedraw()
     }
@@ -613,6 +646,7 @@ function clearAllSelected() {
     elm.classList.add('draggable')
   })
 }
+
 function handleSelected(target, dragging = false) {
   if (isMouseInBlockingState()) return;
 
