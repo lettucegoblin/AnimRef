@@ -1,6 +1,6 @@
 const {
-  ipcRenderer, 
-  contextBridge, 
+  ipcRenderer,
+  contextBridge,
   ipcMain
 } = require('electron')
 
@@ -8,7 +8,7 @@ const {
 const interact = require('./interact.min.js')
 let state = {
   mode: 'init', // 'init', 'standard', 'edit-video'
-  editVideo:{
+  editVideo: {
 
   },
   currentScale: 1,
@@ -33,7 +33,7 @@ let videoExample = {
   loopPairs: [[0, 119], [44, 56]], // can derive A, B, C & color coding from index
   activeLoopPair: 0
 }
-function closeEditVideo(){
+function closeEditVideo() {
   //state.editVideo.videoElement.removeEventListener('timeupdate', onPlayerProgress)
   state.mode = 'standard'
   updateScaleAndTranslate(state.editVideo.backupState.currentScale, state.editVideo.backupState.translate)
@@ -43,7 +43,7 @@ function closeEditVideo(){
   state.editVideo = {}
 }
 
-function editVideo(video){
+function editVideo(video) {
   console.log('video', video)
   state.mode = 'edit-video'
   document.querySelector('#root').style.cursor = ""
@@ -61,22 +61,22 @@ function editVideo(video){
   video.element.className = "editVideo"
   document.querySelector('#root').classList.add('disableBorder')
   document.querySelector('#editVideoTools').classList.remove('hide')
-  
+
   document.getElementById('eventTrigger').dataset.changesliders = JSON.stringify(video.loopPairs[video.activeLoopPair])
 
-  if(video.type =='youtube'){
+  if (video.type == 'youtube') {
     state.editVideo.videoElement = document.querySelector('.editVideo iframe').contentDocument.querySelector('video')
-  } else{
+  } else {
     state.editVideo.videoElement = document.querySelector('.editVideo')
   }
-  
+
   //state.editVideo.videoElement.addEventListener('timeupdate', onPlayerProgress)
   //
-  
+
   console.log(video)
 }
 
-function onPlayerProgress(e){
+function onPlayerProgress(e) {
   //am i editvideo?
   //  handle edit stuff
   let sliderPositions = document.querySelectorAll('.noUi-handle')
@@ -86,21 +86,21 @@ function onPlayerProgress(e){
   let sliderElement = document.querySelector('#slider')
   let currentTimePercent = (this.currentTime / this.duration * 100)
 
-  if(this != state.editVideo.videoElement){
+  if (this != state.editVideo.videoElement) {
 
     let leftPercent = parseFloat(this.dataset.loopLeft)
     let rightPercent = parseFloat(this.dataset.loopRight)
     //console.log('im not edit video',leftPercent, rightPercent)
-    if(leftPercent > currentTimePercent){
+    if (leftPercent > currentTimePercent) {
       this.currentTime = percentToCurrentTime(leftPercent, this.duration)
       currentTimePercent = (this.currentTime / this.duration * 100)
     }
-    if(rightPercent < currentTimePercent){
+    if (rightPercent < currentTimePercent) {
       this.currentTime = percentToCurrentTime(leftPercent, this.duration)
       currentTimePercent = (this.currentTime / this.duration * 100)
     }
     return;
-  } 
+  }
 
   //console.log('im edit video')
 
@@ -108,26 +108,26 @@ function onPlayerProgress(e){
   state.editVideo.video.loopPairs[state.editVideo.video.activeLoopPair][1] = rightSliderPercent
   this.dataset.loopLeft = leftSliderPercent
   this.dataset.loopRight = rightSliderPercent
-  
+
   //console.log(state.editVideo.video.loopPairs, leftSliderPercent, rightSliderPercent)
 
-  if(sliderElement.classList.contains('noUi-state-drag')){
-      dragPercent = parseFloat(sliderElement.querySelector('.noUi-active')['ariaValueNow'])
-      this.currentTime = percentToCurrentTime(dragPercent, this.duration)
+  if (sliderElement.classList.contains('noUi-state-drag')) {
+    dragPercent = parseFloat(sliderElement.querySelector('.noUi-active')['ariaValueNow'])
+    this.currentTime = percentToCurrentTime(dragPercent, this.duration)
   } else {
-      if(leftSliderPercent > currentTimePercent){
-          this.currentTime = percentToCurrentTime(leftSliderPercent, this.duration)
-          currentTimePercent = (this.currentTime / this.duration * 100)
-      }
-      if(rightSliderPercent < currentTimePercent){
-          //.noUi-state-drag
-          if(sliderElement.classList.contains('noUi-state-drag')){
-              this.currentTime = percentToCurrentTime(rightSliderPercent, this.duration)
-          } else
-              this.currentTime = percentToCurrentTime(leftSliderPercent, this.duration)
-          
-          currentTimePercent = (this.currentTime / this.duration * 100)
-      }
+    if (leftSliderPercent > currentTimePercent) {
+      this.currentTime = percentToCurrentTime(leftSliderPercent, this.duration)
+      currentTimePercent = (this.currentTime / this.duration * 100)
+    }
+    if (rightSliderPercent < currentTimePercent) {
+      //.noUi-state-drag
+      if (sliderElement.classList.contains('noUi-state-drag')) {
+        this.currentTime = percentToCurrentTime(rightSliderPercent, this.duration)
+      } else
+        this.currentTime = percentToCurrentTime(leftSliderPercent, this.duration)
+
+      currentTimePercent = (this.currentTime / this.duration * 100)
+    }
   }
   let progressBarWidth = sliderElement.getBoundingClientRect().width // 10
 
@@ -135,17 +135,17 @@ function onPlayerProgress(e){
   //    transform: translateX(41.4966%);
   document.getElementById('progressbar').style.transform = `translateX(${progressBarTimePosition}px)`
   //sliderElement.style.background = `linear-gradient(90deg, rgba(78,47,102,1) 0%, rgba(91,52,122,1) ${progressBarTimePosition}px, rgba(113,80,136,1) ${progressBarTimePosition}px, rgba(121,76,157,1) 100%)`
-  
+
 }
-function percentToCurrentTime(percent, duration){
-  if(percent >= 100) return duration
-  if(percent <= 0) return 0
-  let ct = (percent*duration)/100
+function percentToCurrentTime(percent, duration) {
+  if (percent >= 100) return duration
+  if (percent <= 0) return 0
+  let ct = (percent * duration) / 100
   console.log("percentToCurrentTime", ct)
   return ct
 }
 
-function newScene(){
+function newScene() {
   document.getElementById('itemHolder').innerHTML = ''
   updateScaleAndTranslate(1, {
     translateX: 0,
@@ -153,22 +153,22 @@ function newScene(){
   });
   initWorkspace()
   refreshWorkspace()
-  
+
   state.elements = []
   document.querySelector('#welcome').classList.remove("hide")
 }
 
-function loadState(loadedState, filePath){
+function loadState(loadedState, filePath) {
   // file stuff
 
-  if(state.mode == 'init')
+  if (state.mode == 'init')
     init();
-  
+
 
   newScene()
   updateScaleAndTranslate(loadedState.currentScale, loadedState.translate)
 
-  for(var i in loadedState.elements){
+  for (var i in loadedState.elements) {
     addMediaWithPath(loadedState.elements[i].path, loadedState.elements[i].type, loadedState.elements[i])
   }
   ipcRenderer.send('loaded-state', filePath)
@@ -177,9 +177,9 @@ function loadState(loadedState, filePath){
 document.addEventListener('keydown', evt => {
   mouseObj.keys[evt.key] = true
 
-  
-  if(evt.key === 'Delete'){
-    
+
+  if (evt.key === 'Delete') {
+
     console.log('delete selected')
     deleteSelected()
   } else if (evt.key === 'v' && evt.ctrlKey) {
@@ -188,7 +188,7 @@ document.addEventListener('keydown', evt => {
   } else if (evt.key === ' ' && evt.ctrlKey) {
     mouseObj.ctrlSpace = true;
     console.log('Ctrl+space was pressed');
-  } else if(evt.key === ' '){
+  } else if (evt.key === ' ') {
     mouseObj.space = true;
   }
 });
@@ -199,29 +199,29 @@ document.addEventListener('keyup', evt => {
   if (evt.key === ' ' || evt.key == 'Control') {
     mouseObj.ctrlSpace = false;
     console.log('Ctrl+space was released');
-    if(evt.key === ' '){
+    if (evt.key === ' ') {
       mouseObj.space = false;
     }
   }
-  
+
 })
 
-function getSelected(){
-  if(document.querySelector('.editVideo')) return {type:'edit-video'}
+function getSelected() {
+  if (document.querySelector('.editVideo')) return { type: 'edit-video' }
   let lastIndex = state.elements.length - 1
-  if(!state.elements[lastIndex] || !state.elements[lastIndex].element.classList.contains('selectedItem')) return null
-  
+  if (!state.elements[lastIndex] || !state.elements[lastIndex].element.classList.contains('selectedItem')) return null
+
   return state.elements[lastIndex]
 }
 document.addEventListener('contextmenu', (e) => {
   e.preventDefault()
   console.log(state)
-  if(mouseObj.dragging) {
-    mouseObj.dragging = false; 
+  if (mouseObj.dragging) {
+    mouseObj.dragging = false;
     return;
   }
-  
-  
+
+
 })
 let mouseObj = {
   initPos: null,
@@ -233,48 +233,45 @@ let mouseObj = {
   //time dragging & distance dragged
 }
 document.addEventListener('mousedown', (e) => {
-  mouseObj.initPos = {x: e.clientX, y: e.clientY}
-  mouseObj.initClientPos = {x: e.screenX, y: e.screenY}
-  mouseObj.initTranslate = {x: (parseFloat(document.body.dataset.translateX) || 0), y: (parseFloat(document.body.dataset.translateY) || 0)}
+  mouseObj.initPos = { x: e.clientX, y: e.clientY }
+  mouseObj.initClientPos = { x: e.screenX, y: e.screenY }
+  mouseObj.initTranslate = { x: (parseFloat(document.body.dataset.translateX) || 0), y: (parseFloat(document.body.dataset.translateY) || 0) }
   ipcRenderer.send('record-window-size', window.innerHeight, window.innerHeight)
   mouseObj.dragging = false
 })
 document.addEventListener('mousemove', (e) => {
-  
+
   // ctrl + space + mouse drag = zoom 
-  if( e.buttons == 1 && mouseObj.keys[' '] && mouseObj.keys['Control']){
+  if (e.buttons == 1 && mouseObj.keys[' '] && mouseObj.keys['Control']) {
     //console.log(`handleZoom(${e.movementX})`);
-    
     handleZoom(e.movementX, mouseObj.initPos.x, mouseObj.initPos.y)
     e.preventDefault()
-  } else if( e.buttons == 1 && mouseObj.space){
-    
-    handleMove(e.movementX , e.movementY)
+  } else if (e.buttons == 1 && mouseObj.space) {
+    handleMove(e.movementX, e.movementY)
+  } else if (e.buttons == 2) {
+    ipcRenderer.send('move-electron-window', e.screenX, e.screenY, mouseObj.initPos)
+    mouseObj.dragging = true;
 
-  } else if(e.buttons == 2){
-      ipcRenderer.send('move-electron-window', e.screenX, e.screenY, mouseObj.initPos)
-      mouseObj.dragging = true;
-      
   }
-  
+
 })
-function handleMove(dX, dY){
+function handleMove(dX, dY) {
   currentScale = parseFloat(document.body.dataset.currentScale) || 1
 
-  
+
   let translateX = (parseFloat(document.body.dataset.translateX) || 0);
   let translateY = (parseFloat(document.body.dataset.translateY) || 0);//(parseFloat(document.body.dataset.translateY) || 0);
   translateX += dX
   translateY += dY //- mouseObj.initTranslate.y 
 
-  updateScaleAndTranslate(currentScale, {translateX, translateY})
+  updateScaleAndTranslate(currentScale, { translateX, translateY })
 }
 
-function handleZoom(_delta, clientX, clientY){
-  if(document.querySelector('.editVideo')) return;
+function handleZoom(_delta, clientX, clientY) {
+  if (document.querySelector('.editVideo')) return;
   currentScale = parseFloat(document.body.dataset.currentScale) || 1
   let delta = _delta / 60
-  
+
   const nextScale = Math.max(currentScale + delta * (currentScale / 2), 0.01)
   const ratio = 1 - nextScale / currentScale
   let translateX = (parseFloat(document.body.dataset.translateX) || 0);
@@ -282,47 +279,47 @@ function handleZoom(_delta, clientX, clientY){
 
   translateX += (clientX - translateX) * ratio
   translateY += (clientY - translateY) * ratio
-  
+
   currentScale = nextScale
-  updateScaleAndTranslate(currentScale, {translateX, translateY})
+  updateScaleAndTranslate(currentScale, { translateX, translateY })
   //zoom(nextScale, e)
 }
 document.addEventListener('mouseup', (e) => {
   console.log(e.button, mouseObj.dragging)
-  if(e.button == 2){
-    if(mouseObj.dragging){
-      
+  if (e.button == 2) {
+    if (mouseObj.dragging) {
+
       distance = Math.sqrt(
-                  Math.pow(e.screenX - mouseObj.initClientPos.x, 2) 
-                  +
-                  Math.pow(e.screenY - mouseObj.initClientPos.y, 2) );
+        Math.pow(e.screenX - mouseObj.initClientPos.x, 2)
+        +
+        Math.pow(e.screenY - mouseObj.initClientPos.y, 2));
       console.log(distance)
-      if(distance < 4){ 
-        
+      if (distance < 4) {
+
         ipcRenderer.send('show-context-menu', getSelected()?.type || "void")
       }
       mouseObj.dragging = false;
 
-    } else{
+    } else {
       ipcRenderer.send('show-context-menu', getSelected()?.type || "void")
     }
   }
 })
-ipcRenderer.on('close-edit-video', (event, newState) =>{
+ipcRenderer.on('close-edit-video', (event, newState) => {
   closeEditVideo()
 })
-ipcRenderer.on('edit-video', (event, newState) =>{
+ipcRenderer.on('edit-video', (event, newState) => {
   editVideo(getSelected())
 })
-ipcRenderer.on('new-scene', (event) =>{
+ipcRenderer.on('new-scene', (event) => {
   newScene()
 })
-ipcRenderer.on('load-scene', (event, newState, filePath) =>{
+ipcRenderer.on('load-scene', (event, newState, filePath) => {
   loadState(newState, filePath)
 })
-ipcRenderer.on('save-scene', (event, filePath) =>{
+ipcRenderer.on('save-scene', (event, filePath) => {
   var stateCopy = JSON.parse(JSON.stringify(state));
-  for(var i = 0; i < stateCopy.elements.length; i++){
+  for (var i = 0; i < stateCopy.elements.length; i++) {
     //stateCopy.elements.push()
     delete stateCopy.elements[i].element;
   }
@@ -332,47 +329,47 @@ ipcRenderer.on('save-scene', (event, filePath) =>{
 ipcRenderer.on('clipboard', (event, msg) => {
   let payload = JSON.parse(msg);
   console.log(payload)
-  if(/youtube.com\/.*v=([^\?]*)/.test(payload[payload.type])){
+  if (/youtube.com\/.*v=([^\?]*)/.test(payload[payload.type])) {
     addMediaWithPath(payload[payload.type], "youtube")
-  }else
+  } else
     addMediaWithPath(payload[payload.type])
 })
 
-function addMediaWithPath(path, type = 'img', loadedState={ x: 0, y: 0, width: null, height: null}){
-  if(state.mode == 'init') init();
-  if(!document.querySelector('#welcome').classList.contains("hide"))
+function addMediaWithPath(path, type = 'img', loadedState = { x: 0, y: 0, width: null, height: null }) {
+  if (state.mode == 'init') init();
+  if (!document.querySelector('#welcome').classList.contains("hide"))
     document.querySelector('#welcome').classList.add("hide");
   let itemHolder = document.getElementById('itemHolder')
 
   let mediaElement = undefined
-  if(type =='img'){
+  if (type == 'img') {
     mediaElement = document.createElement('img')
-    mediaElement.addEventListener('load', function loaded(){
-      let {x, y, width, height} = this.getClientRects()[0]
+    mediaElement.addEventListener('load', function loaded() {
+      let { x, y, width, height } = this.getClientRects()[0]
       resizeWorkspaceToFitObj(loadedState.x, loadedState.y, width, height)
 
     })
     mediaElement.src = path;
-  } else if(type == 'video'){
+  } else if (type == 'video') {
     mediaElement = document.createElement('video')
     mediaElement.autoplay = true;
     mediaElement.loop = true;
     mediaElement.muted = true;
-    
+
     let srcElement = document.createElement('source')
     srcElement.src = path;
     mediaElement.appendChild(srcElement)
-  } else if(type == 'youtube') {
+  } else if (type == 'youtube') {
     //mediaElement = document.createElement('iframe')
-    if(/youtube.com\/.*v=([^\?]*)/.test(path)){
+    if (/youtube.com\/.*v=([^\?]*)/.test(path)) {
 
       var code = extractYoutubeId(path)
-      if(code == null) return;
+      if (code == null) return;
       mediaElement = document.createElement('div')
       mediaElement.classList.add('youtubePlayer')
       mediaElement.classList.add('playerNeedsSetup')
       mediaElement.dataset.idcode = code
-      
+
       mediaElement.style.width = (loadedState.width || 640) + "px";
       mediaElement.style.height = (loadedState.height || 360) + "px";
 
@@ -390,7 +387,7 @@ function addMediaWithPath(path, type = 'img', loadedState={ x: 0, y: 0, width: n
       mediaElement.allowFullscreen = false;
       */
     }
-  } else{
+  } else {
     alert('unsupported media type')
     return;
   }
@@ -401,7 +398,7 @@ function addMediaWithPath(path, type = 'img', loadedState={ x: 0, y: 0, width: n
   mediaElement.dataset.zIndex = zIndex
   mediaElement.dataset.x = loadedState.x
   mediaElement.dataset.y = loadedState.y
-  if(loadedState.width != null && loadedState.height != null){
+  if (loadedState.width != null && loadedState.height != null) {
     mediaElement.width = loadedState.width
     mediaElement.height = loadedState.height
   }
@@ -412,13 +409,13 @@ function addMediaWithPath(path, type = 'img', loadedState={ x: 0, y: 0, width: n
     width: loadedState.width,
     height: loadedState.height
   }
-  if(type == 'youtube' || type == 'video'){
+  if (type == 'youtube' || type == 'video') {
     mediaObj.loopPairs = loadedState.loopPairs || [[0, 100]] // 0% & 100% positions for loop
     mediaObj.activeLoopPair = loadState.activeLoopPair || 0
   }
-  
+
   state.elements.push(mediaObj)
-  if(type == 'video'){
+  if (type == 'video') {
     mediaObj.element.dataset.loopLeft = mediaObj.loopPairs[mediaObj.activeLoopPair][0]
     mediaObj.element.dataset.loopRight = mediaObj.loopPairs[mediaObj.activeLoopPair][1]
     mediaObj.element.addEventListener('timeupdate', onPlayerProgress)
@@ -433,24 +430,24 @@ document.addEventListener('drop', (event) => {
   event.preventDefault();
   event.stopPropagation();
   // Todo check if file is valid
-  
-  
+
+
   for (const f of event.dataTransfer.files) {
-      // Using the path attribute to get absolute file path
-      console.log('File Path of dragged files: ', f.path, state)
-      
-      if(f.path.endsWith('.mp4')){
-        addMediaWithPath(f.path, 'video')
-      } else
-        addMediaWithPath(f.path)
-    }
+    // Using the path attribute to get absolute file path
+    console.log('File Path of dragged files: ', f.path, state)
+
+    if (f.path.endsWith('.mp4')) {
+      addMediaWithPath(f.path, 'video')
+    } else
+      addMediaWithPath(f.path)
+  }
 });
-function init(){
+function init() {
   document.documentElement.addEventListener('mousedown', (event) => {
     var target = event.target
     //console.log('click', target)
-    
-    if(target.id == 'root' || target.id == 'workspaceBox'){
+
+    if (target.id == 'root' || target.id == 'workspaceBox') {
       console.log('background click')
       clearAllSelected()
     }
@@ -462,46 +459,46 @@ document.addEventListener('dragover', (e) => {
   e.preventDefault();
   e.stopPropagation();
 });
-function extractYoutubeId(path){
+function extractYoutubeId(path) {
   const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#\&\?]*).*/;
   var capture = path.match(regExp)//path.match(/v=([^\?]*)/);
 
   return capture[7]
 }
 
-function clampWorkspaceTranslate(ratio, newTranslate){
-  let {translateX, translateY} = newTranslate
+function clampWorkspaceTranslate(ratio, newTranslate) {
+  let { translateX, translateY } = newTranslate
 
   let windowElement = document.getElementById('root')
-  let windowWidth = windowElement.clientWidth 
+  let windowWidth = windowElement.clientWidth
   let windowHeight = windowElement.clientHeight
 
-  if(-(translateX) > state.workspaceRect.x2 * ratio){ //workspace off screen to left
+  if (-(translateX) > state.workspaceRect.x2 * ratio) { //workspace off screen to left
     console.log('workspace off screen to left')
     translateX = -(state.workspaceRect.x2 * ratio)
   }
-  else if((translateX) + (state.workspaceRect.x1 * ratio) > windowWidth){ // workspace off screen to right
+  else if ((translateX) + (state.workspaceRect.x1 * ratio) > windowWidth) { // workspace off screen to right
     console.log('workspace off screen to right')
-    translateX = windowWidth - (state.workspaceRect.x1 * ratio) 
+    translateX = windowWidth - (state.workspaceRect.x1 * ratio)
   }
 
-  if(-(translateY) > state.workspaceRect.y2 * ratio){ // workspace off screen to top
+  if (-(translateY) > state.workspaceRect.y2 * ratio) { // workspace off screen to top
     console.log('workspace off screen to top')
-    translateY = -(state.workspaceRect.y2 * ratio) 
+    translateY = -(state.workspaceRect.y2 * ratio)
   }
-  else if((translateY) + (state.workspaceRect.y1 * ratio) > windowHeight){ // workspace off screen to bottom
+  else if ((translateY) + (state.workspaceRect.y1 * ratio) > windowHeight) { // workspace off screen to bottom
     console.log('workspace off screen to bottom')
-    translateY = windowHeight - (state.workspaceRect.y1 * ratio) 
+    translateY = windowHeight - (state.workspaceRect.y1 * ratio)
   }
-  return {translateX:translateX, translateY:translateY}
+  return { translateX: translateX, translateY: translateY }
 }
 
-function updateScaleAndTranslate(newScale, newTranslate){
-  if(newScale > 2){
+function updateScaleAndTranslate(newScale, newTranslate) {
+  if (newScale > 2) {
     state.currentScale = 2
     return;
   }
-  
+
   newTranslate = clampWorkspaceTranslate(newScale, newTranslate)
   state.currentScale = newScale
   state.translate = newTranslate
@@ -514,16 +511,16 @@ function updateScaleAndTranslate(newScale, newTranslate){
   //window.currentScale = state.currentScale;
 }
 
-let objPlayground = {hi:'yo'};
+let objPlayground = { hi: 'yo' };
 contextBridge.exposeInMainWorld('myAPI', {
   updateScaleAndTranslate: updateScaleAndTranslate,
   updateYoutubeOriginalSize: (idcode, w, h) => {
-    for(var i in state.elements){
-      if(state.elements[i].type == 'youtube' && extractYoutubeId(state.elements[i].path) == idcode){
-        
+    for (var i in state.elements) {
+      if (state.elements[i].type == 'youtube' && extractYoutubeId(state.elements[i].path) == idcode) {
+
         state.elements[i].width = state.elements[i].width || w;
         state.elements[i].height = state.elements[i].height || h;
-        
+
         state.elements[i].element.style.width = state.elements[i].width
         state.elements[i].element.style.height = state.elements[i].height
 
@@ -534,7 +531,7 @@ contextBridge.exposeInMainWorld('myAPI', {
         console.log(state.elements[i])
       }
     }
-    
+
   },
   objPlayground: objPlayground
 
@@ -551,10 +548,10 @@ interact('.draggable')
     //
     event.preventDefault()
   })
-function isMouseInBlockingState(){
-  if(mouseObj.keys[' '] && mouseObj.keys['Control']){
+function isMouseInBlockingState() {
+  if (mouseObj.keys[' '] && mouseObj.keys['Control']) {
     return true
-  } else if(mouseObj.keys[' ']){
+  } else if (mouseObj.keys[' ']) {
     return true
   }
   return false
@@ -566,8 +563,8 @@ interact('.selectedItem').resizable({
   ratio: 1,
   enabled: true,
   listeners: [{
-    move (event) {
-      if(isMouseInBlockingState()) return;
+    move(event) {
+      if (isMouseInBlockingState()) return;
       var target = event.target
       //handleSelected(target, true)
       setTransformForElement(target.dataset.zIndex, event.deltaRect.left, event.deltaRect.top, event.rect.width, event.rect.height)
@@ -590,17 +587,17 @@ interact('.selectedItem').resizable({
   listeners: { move: dragMoveListener },
   inertia: false
 }).on('tap', function (event) {
-  
+
   var target = event.target
   handleSelected(target)
   //
   event.preventDefault()
 })
 
-function deleteSelected(){
-  if(state.elements.length == 0) return
-  
-  if(!state.elements[state.elements.length - 1].element.classList.contains('selectedItem')) return
+function deleteSelected() {
+  if (state.elements.length == 0) return
+
+  if (!state.elements[state.elements.length - 1].element.classList.contains('selectedItem')) return
 
   state.elements[state.elements.length - 1].element.remove();
   //delete state.elements[state.elements.length - 1].element
@@ -608,49 +605,49 @@ function deleteSelected(){
   clearAllSelected()
 }
 
-function clearAllSelected(){
-  document.querySelectorAll('.selectedItem').forEach((elm)=>{
+function clearAllSelected() {
+  document.querySelectorAll('.selectedItem').forEach((elm) => {
     elm.classList.remove('selectedItem')
     elm.classList.add('draggable')
   })
 }
-function handleSelected(target, dragging = false){
-  if(isMouseInBlockingState()) return;
+function handleSelected(target, dragging = false) {
+  if (isMouseInBlockingState()) return;
 
   clearAllSelected()
   target.classList.remove('draggable')
   target.classList.add('selectedItem')
-  
-  if(state.elements.length > 1){
+
+  if (state.elements.length > 1) {
     let targetIndex = parseInt(target.dataset.zIndex);
-    
+
     state.elements.push(state.elements.splice(targetIndex, 1)[0]);
-    for(var i = targetIndex; i < state.elements.length; i++){ // i can start at targetIndex
+    for (var i = targetIndex; i < state.elements.length; i++) { // i can start at targetIndex
       state.elements[i].element.style.zIndex = i;
       state.elements[i].element.dataset.zIndex = i;
     }
   }
 }
 
-function dragMoveListener (event) {
-  if(isMouseInBlockingState()) return;
+function dragMoveListener(event) {
+  if (isMouseInBlockingState()) return;
   var target = event.target
   handleSelected(target, true)
   setTransformForElement(target.dataset.zIndex, event.dx, event.dy)
   forceRedraw()
 }
 
-function resizeWorkspaceToFitObj(x, y, width, height){
-  if( width == 0 || height == 0) return
+function resizeWorkspaceToFitObj(x, y, width, height) {
+  if (width == 0 || height == 0) return
   state.workspaceRect.x1 = Math.min(x, state.workspaceRect.x1)
   state.workspaceRect.y1 = Math.min(y, state.workspaceRect.y1)
-  
+
   state.workspaceRect.x2 = Math.max(x + width, state.workspaceRect.x2)
   state.workspaceRect.y2 = Math.max(y + height, state.workspaceRect.y2)
   refreshWorkspace()
 }
 
-function initWorkspace(){
+function initWorkspace() {
   state.workspaceRect = {
     x1: 0,
     y1: 0,
@@ -659,7 +656,7 @@ function initWorkspace(){
   }
 }
 
-function refreshWorkspace(){
+function refreshWorkspace() {
   const element = document.getElementById('workspaceBox');
   element.style.left = state.workspaceRect.x1 + "px";
   element.style.top = state.workspaceRect.y1 + "px";
@@ -668,32 +665,32 @@ function refreshWorkspace(){
 
 }
 
-function setTransformForElement(elementIndex, dx = 0, dy = 0, width = null, height = null){
+function setTransformForElement(elementIndex, dx = 0, dy = 0, width = null, height = null) {
   let elementObj = state.elements[elementIndex]
   let x = (parseFloat(elementObj.element.dataset.x) || 0) + (dx / state.currentScale)
   let y = (parseFloat(elementObj.element.dataset.y) || 0) + (dy / state.currentScale)
-  
+
   elementObj.element.setAttribute('data-x', x)
   elementObj.element.setAttribute('data-y', y)
   elementObj.x = x
   elementObj.y = y
 
-  if(width != null && height != null){
+  if (width != null && height != null) {
     elementObj.width = width / state.currentScale
     elementObj.height = height / state.currentScale
     elementObj.element.style.width = width / state.currentScale + 'px'
     elementObj.element.style.height = height / state.currentScale + 'px'
   }
-  
+
   resizeWorkspaceToFitObj(x, y, elementObj.width || elementObj.element.width, elementObj.height || elementObj.element.height)
-  
+
   elementObj.element.style.transform = 'translate(' + x + 'px, ' + y + 'px)'
 }
 
-function forceRedraw(){
-  if(document.body.parentElement.style.backgroundColor == ''){
+function forceRedraw() {
+  if (document.body.parentElement.style.backgroundColor == '') {
     document.body.parentElement.style.backgroundColor = '#04040400'
-  } else{
+  } else {
     document.body.parentElement.style.backgroundColor = ''
   }
 }

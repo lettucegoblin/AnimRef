@@ -1,14 +1,14 @@
 const {
-    BrowserWindow,
-    Menu,
-    MenuItem,
-    ipcMain,
-    app,
-    clipboard,
-    screen,
-    globalShortcut,
-    dialog
-  } = require('electron')
+  BrowserWindow,
+  Menu,
+  MenuItem,
+  ipcMain,
+  app,
+  clipboard,
+  screen,
+  globalShortcut,
+  dialog
+} = require('electron')
 const path = require('path')
 const fs = require('fs');
 const Store = require('electron-store');
@@ -21,7 +21,7 @@ const store = new Store();
 let width = 400;
 let height = 300;
 
-function createWindow () {
+function createWindow() {
   const win = new BrowserWindow({
     backgroundColor: "#202020",
     width: width,
@@ -43,87 +43,91 @@ const recentSubmenu = new Menu()
 app.whenReady().then(() => {
   const mainWin = createWindow()
 
-  contextMenu.append(new MenuItem({ id:"close-edit-video", label: 'Close Edit Video', visible: false,
+  contextMenu.append(new MenuItem({
+    id: "close-edit-video", label: 'Close Edit Video', visible: false,
     click: (menuItem, browserWindow, event) => {
       //mainWin.setAlwaysOnTop(menuItem.checked);
       mainWin.webContents.send('close-edit-video')
-    } 
+    }
   }));
 
-  contextMenu.append(new MenuItem({ id:"edit-video", label: 'Edit Video', visible: false,
+  contextMenu.append(new MenuItem({
+    id: "edit-video", label: 'Edit Video', visible: false,
     click: (menuItem, browserWindow, event) => {
       //mainWin.setAlwaysOnTop(menuItem.checked);
       mainWin.webContents.send('edit-video')
-    } 
+    }
   }));
-  contextMenu.append(new MenuItem({ label: 'Paste',
-  accelerator: process.platform === 'darwin' ? 'Cmd+V' : 'Ctrl+V',
+  contextMenu.append(new MenuItem({
+    label: 'Paste',
+    accelerator: process.platform === 'darwin' ? 'Cmd+V' : 'Ctrl+V',
     click: (menuItem, browserWindow, event) => {
       console.log('click paste')
-      
+
       handlePaste();
-    } 
+    }
   }));
   contextMenu.append(new MenuItem({ type: 'separator' }))
 
-  contextMenu.append(new MenuItem({ label: 'Always on Top', type: 'checkbox', checked: true, 
+  contextMenu.append(new MenuItem({
+    label: 'Always on Top', type: 'checkbox', checked: true,
     click: (menuItem, browserWindow, event) => {
       mainWin.setAlwaysOnTop(menuItem.checked);
-    } 
+    }
   }));
   globalShortcut.register('Control+Shift+I', () => {
     mainWin.webContents.openDevTools()
   });
   //globalShortcut.register('CommandOrControl+V', handlePaste)
 
-  function handlePaste(){
+  function handlePaste() {
     console.log('handlePaste')
 
     let payload = {}
-      ///strimg = JSON.stringify(img)
-      var formats = clipboard.availableFormats();
-      var rawFilePath = clipboard.read('FileNameW');
+    ///strimg = JSON.stringify(img)
+    var formats = clipboard.availableFormats();
+    var rawFilePath = clipboard.read('FileNameW');
 
-      if(rawFilePath) {
-        var filePath = rawFilePath.replace(new RegExp(String.fromCharCode(0), 'g'), '');
+    if (rawFilePath) {
+      var filePath = rawFilePath.replace(new RegExp(String.fromCharCode(0), 'g'), '');
+      payload.type = 'filePath'
+      payload.filePath = filePath
+      console.log(filePath)
+
+    } else if (formats.indexOf('image/png') > -1) {
+      img = clipboard.readImage();
+      payload.type = 'dataURL'
+      payload.dataURL = img.toDataURL().replace('png', 'gif')
+    } else if (formats.indexOf('text/plain') > -1) {
+      //potential link
+      var potentialUrl = clipboard.readText()
+      console.log("potentialUrl", potentialUrl)
+      if (validateUrl(potentialUrl)) {
         payload.type = 'filePath'
-        payload.filePath = filePath
-        console.log(filePath)
-        
-      } else if(formats.indexOf('image/png') > -1) {
-        img = clipboard.readImage();
-        payload.type = 'dataURL'
-        payload.dataURL = img.toDataURL().replace('png','gif')
-      } else if(formats.indexOf('text/plain') > -1) {
-        //potential link
-        var potentialUrl = clipboard.readText()
-        console.log("potentialUrl", potentialUrl)
-        if(validateUrl(potentialUrl)){
-          payload.type = 'filePath'
-          payload.filePath = potentialUrl
-        } else{
-          console.log('not a url')
-          return
-        }
+        payload.filePath = potentialUrl
+      } else {
+        console.log('not a url')
+        return
       }
+    }
 
-      console.log(formats)
-      //console.log(payload)
-      mainWin.webContents.send('clipboard', JSON.stringify(payload)) // send to web page
+    console.log(formats)
+    //console.log(payload)
+    mainWin.webContents.send('clipboard', JSON.stringify(payload)) // send to web page
   }
-  function addToRecent(filePath){
+  function addToRecent(filePath) {
     var recent = JSON.parse(store.get('recent') || "[]")
     console.log("addToRecent", store.get('recent'), filePath)
     let index = recent.indexOf(filePath)
     let exists = index != -1
-    if(exists) {
+    if (exists) {
       recent.splice(index, 1)
     }
     recent.push(filePath)
     store.set('recent', JSON.stringify(recent));
     console.log("addedToRecent", store.get('recent'), filePath)
-    if(!exists){
-      recentSubmenu.append(new MenuItem({ 
+    if (!exists) {
+      recentSubmenu.append(new MenuItem({
         label: filePath,
         click: (menuItem, browserWindow, event) => {
           readAndLoadFilePath(menuItem.label)
@@ -131,11 +135,11 @@ app.whenReady().then(() => {
       }))
     }
   }
-  function populateRecent(){
+  function populateRecent() {
     var recent = JSON.parse(store.get('recent') || "[]")
     console.log("populateRecent", store.get('recent'))
-    for(recentfile of recent){
-      recentSubmenu.append(new MenuItem({ 
+    for (recentfile of recent) {
+      recentSubmenu.append(new MenuItem({
         label: recentfile,
         click: (menuItem, browserWindow, event) => {
           readAndLoadFilePath(menuItem.label)
@@ -143,15 +147,15 @@ app.whenReady().then(() => {
       }))
     }
   }
-  function loadMostRecent(){
+  function loadMostRecent() {
     var recent = JSON.parse(store.get('recent') || "[]")
-    if(recent.length > 0)
+    if (recent.length > 0)
       readAndLoadFilePath(recent[recent.length - 1])
   }
 
   contextMenu.append(new MenuItem({ type: 'separator' }))
-  
-  function readAndLoadFilePath(filePath){
+
+  function readAndLoadFilePath(filePath) {
     fs.readFile(filePath, (err, data) => {
       if (err) throw err;
       let newState = JSON.parse(data);
@@ -159,22 +163,23 @@ app.whenReady().then(() => {
     });
   }
 
-  contextMenu.append(new MenuItem({ label: "Recent", type: 'submenu', 
+  contextMenu.append(new MenuItem({
+    label: "Recent", type: 'submenu',
     submenu: recentSubmenu
   }))
   populateRecent()
-  contextMenu.append(new MenuItem({ 
+  contextMenu.append(new MenuItem({
     label: 'Load',
     click: (menuItem, browserWindow, event) => {
-      dialog.showOpenDialog({ 
-        properties: ['openFile'], 
+      dialog.showOpenDialog({
+        properties: ['openFile'],
         filters: [
           { name: 'PurRef Gif Scene', extensions: ['purgif'] }
-        ] 
-       }).then(result => {
+        ]
+      }).then(result => {
         console.log(result.canceled)
         console.log("result.filePaths", result.filePaths)
-        if(!result.canceled){
+        if (!result.canceled) {
           readAndLoadFilePath(result.filePaths[0])
         }
       }).catch(err => {
@@ -182,18 +187,18 @@ app.whenReady().then(() => {
       })
     }
   }));
-  contextMenu.append(new MenuItem({ 
+  contextMenu.append(new MenuItem({
     label: 'Save',
     click: (menuItem, browserWindow, event) => {
-      dialog.showSaveDialog({ 
+      dialog.showSaveDialog({
         defaultPath: 'scene.purgif',
         filters: [
           { name: 'PurRef Gif Scene', extensions: ['purgif'] }
-        ] 
+        ]
       }).then(result => {
         console.log(result.canceled)
         console.log(result.filePath)
-        if(!result.canceled){
+        if (!result.canceled) {
           mainWin.webContents.send('save-scene', result.filePath)
           addToRecent(result.filePath)
         }
@@ -202,13 +207,13 @@ app.whenReady().then(() => {
       })
     }
   }));
-  contextMenu.append(new MenuItem({ 
+  contextMenu.append(new MenuItem({
     label: 'New Scene',
     click: (menuItem, browserWindow, event) => {
       mainWin.webContents.send('new-scene')
     }
   }));
-  contextMenu.append(new MenuItem({ 
+  contextMenu.append(new MenuItem({
     label: 'Close',
     click: (menuItem, browserWindow, event) => {
       browserWindow.close()
@@ -217,16 +222,16 @@ app.whenReady().then(() => {
 
   Menu.setApplicationMenu(contextMenu)
 
-  if(process.argv.indexOf("debug") > -1)
+  if (process.argv.indexOf("debug") > -1)
     mainWin.webContents.openDevTools()
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow()
-      
+
     }
   })
-  
+
   app.on('browser-window-created', (event, win) => {
     win.webContents.on('context-menu', (e, params) => {
       //menu.popup(win, params.x, params.y)
@@ -240,9 +245,9 @@ app.whenReady().then(() => {
     console.log(menuType)
     contextMenu.getMenuItemById("edit-video").visible = false;
     contextMenu.getMenuItemById("close-edit-video").visible = false;
-    if(menuType == 'youtube' || menuType == 'video'){
+    if (menuType == 'youtube' || menuType == 'video') {
       contextMenu.getMenuItemById("edit-video").visible = true;
-    } else if(menuType == 'edit-video'){
+    } else if (menuType == 'edit-video') {
       contextMenu.getMenuItemById("close-edit-video").visible = true;
     }
     contextMenu.popup(win)
@@ -255,7 +260,7 @@ app.whenReady().then(() => {
     //menu.popup(win)
   })
   let dragState = {
-      dragging: false
+    dragging: false
   }
   ipcMain.on('handle-paste', (event, w, h) => {
     handlePaste()
@@ -272,10 +277,10 @@ app.whenReady().then(() => {
     //var dpiRespected = screen.dipToScreenPoint({x: x, y: y})
     //mainWin.setPosition(x,y)
     mainWin.setBounds({
-        width: width,
-        height: height,
-        x: x - initPos.x,
-        y: y - initPos.y
+      width: width,
+      height: height,
+      x: x - initPos.x,
+      y: y - initPos.y
     });
     //win.setSize(width, height)
     //mainWin.setPosition(Math.round(x / 1.25) - Math.round(initPos.x / 1.25), Math.round(y / 1.25) - Math.round(initPos.y / 1.25))

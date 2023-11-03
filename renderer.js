@@ -26,7 +26,7 @@ document.addEventListener('touchstart', function (e) {
 }, true);
 
 document.addEventListener('touchend', function (e) {
-    if(e.touches.length < 2){
+    if (e.touches.length < 2) {
         scalingWithTouch = false
     }
 }, true);
