@@ -248,6 +248,8 @@ document.addEventListener('mousemove', (e) => {
     e.preventDefault()
   } else if (e.buttons == 1 && mouseObj.space) {
     handleMove(e.movementX, e.movementY)
+  } else if (e.buttons == 4) { // middle mouse drag = move
+    handleMove(e.movementX, e.movementY)
   } else if (e.buttons == 2) {
     ipcRenderer.send('move-electron-window', e.screenX, e.screenY, mouseObj.initPos)
     mouseObj.dragging = true;
