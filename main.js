@@ -203,6 +203,12 @@ app.whenReady().then(() => {
     }
   }));
   contextMenu.append(new MenuItem({ 
+    label: 'New Scene',
+    click: (menuItem, browserWindow, event) => {
+      mainWin.webContents.send('new-scene')
+    }
+  }));
+  contextMenu.append(new MenuItem({ 
     label: 'Close',
     click: (menuItem, browserWindow, event) => {
       browserWindow.close()
