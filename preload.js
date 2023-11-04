@@ -360,7 +360,8 @@ function getCenterOfWindowScaled() {
 }
 function addMediaWithPath(path, type = 'img', loadedState) {
   isNewElement = loadedState == null
-  loadedState = loadedState || { x: 0, y: 0, width: null, height: null }
+  let centerWin = getCenterOfWindowScaled();
+  loadedState = loadedState || { x: centerWin.centerX, y: centerWin.centerY, width: null, height: null }
   if (state.mode == 'init') init();
   if (!document.querySelector('#welcome').classList.contains("hide"))
     document.querySelector('#welcome').classList.add("hide");
@@ -369,8 +370,17 @@ function addMediaWithPath(path, type = 'img', loadedState) {
   let mediaElement = undefined
   if (type == 'img' || type == 'dataURL' || type == 'filePath') {
     mediaElement = document.createElement('img')
+    if(isNewElement)
+      mediaElement.style.opacity = 0;
     mediaElement.addEventListener('load', function loaded() {
       let { x, y, width, height } = this.getClientRects()[0]
+      if(isNewElement){
+        //debugger;
+        //loadedState.x = centerWin.centerX - width / 2
+        //loadedState.y = centerWin.centerY - height / 2
+        mediaElement.style.opacity = 1;
+        setTransformForElement(mediaElement.dataset.zIndex, -width / 2, -height / 2, width, height)
+      }
       resizeWorkspaceToFitObj(loadedState.x, loadedState.y, width, height)
 
     })
@@ -430,8 +440,6 @@ function addMediaWithPath(path, type = 'img', loadedState) {
       mediaElement.style.fontSize = undefined
       mediaElement.style.width = widthOnDom + "px";
       mediaElement.style.height = heightOnDom + "px";
-
-      let centerWin = getCenterOfWindowScaled();
 
       let mediaElementScaledWidth = (mediaElement.style.width.replace('px', '') / state.currentScale);
       let mediaElementScaledHeight = (mediaElement.style.height.replace('px', '') / state.currentScale);
