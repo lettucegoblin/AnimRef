@@ -18,7 +18,9 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: purerefAnimated
-        path: out/make/**/*.{zip,dmg}
+        path: |
+          out/make/**/*.zip
+          out/make/**/*.dmg
   build-win-linux:
     runs-on: windows-latest
     steps:
@@ -35,4 +37,6 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: purerefAnimated
-          path: out/make/**/*.{zip,exe}
+          path: |
+            out/make/**/*.zip
+            out/make/**/*.exe
