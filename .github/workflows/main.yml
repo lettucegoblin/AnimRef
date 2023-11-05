@@ -1,0 +1,21 @@
+name: Build and Package
+on: [push]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '19'
+    - name: Install dependencies
+      run: npm ci
+    - name: Package
+      run: npm run make
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: purerefAnimated
+        path: out/**/*.dmg

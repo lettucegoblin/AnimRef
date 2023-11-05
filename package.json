@@ -1,6 +1,6 @@
 {
   "name": "purerefAnimated",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Pureref clone that has support for gifs/videos.",
   "main": "main.js",
   "scripts": {
@@ -30,6 +30,18 @@
   "config": {
     "forge": {
       "packagerConfig": {},
+      "make_targets": {
+        "win32": [
+          "squirrel"
+        ],
+        "darwin": [
+          "dmg"
+        ],
+        "linux": [
+          "deb",
+          "rpm"
+        ]
+      },
       "makers": [
         {
           "name": "@electron-forge/maker-squirrel",

@@ -179,10 +179,12 @@ function loadState(loadedState, filePath) {
   newScene()
   updateScaleAndTranslate(loadedState.currentScale, loadedState.translate)
 
-  for (var i in loadedState.elements) {
-    addMediaWithPath(loadedState.elements[i].path, loadedState.elements[i].type, loadedState.elements[i])
-  }
-  ipcRenderer.send('loaded-state', filePath)
+  setTimeout(function () {
+    for (var i in loadedState.elements) {
+      addMediaWithPath(loadedState.elements[i].path, loadedState.elements[i].type, loadedState.elements[i])
+    }
+    ipcRenderer.send('loaded-state', filePath)
+  }, 1000);
 }
 
 document.addEventListener('keydown', evt => {
@@ -370,12 +372,12 @@ function addMediaWithPath(path, type = 'img', loadedState) {
   let mediaElement = undefined
   if (type == 'img' || type == 'dataURL' || type == 'filePath') {
     mediaElement = document.createElement('img')
-    if(isNewElement)
+    if (isNewElement)
       mediaElement.style.opacity = 0;
     mediaElement.addEventListener('load', function loaded() {
       let { x, y, width, height } = this.getClientRects()[0]
-      if(isNewElement){
-        //debugger;
+      if (isNewElement) {
+
         //loadedState.x = centerWin.centerX - width / 2
         //loadedState.y = centerWin.centerY - height / 2
         mediaElement.style.opacity = 1;
@@ -427,28 +429,45 @@ function addMediaWithPath(path, type = 'img', loadedState) {
     mediaElement.classList.add('textElement')
     mediaElement.innerText = path
 
-
+    console.log("isNewElement", isNewElement)
     if (isNewElement) {
-      scaledFontSize = 24 / state.currentScale
-      mediaElement.style.fontSize = scaledFontSize + 'px'
+      /*
+      mediaElement.style.fontSize = '1ch' // 1ch is the width of the 0 character
       mediaElement.style.opacity = 0
       document.body.appendChild(mediaElement)
-      let { x, y, width:widthOnDom, height:heightOnDom } = mediaElement.getClientRects()[0]
-      
-      document.body.removeChild(mediaElement)
-      mediaElement.style.opacity = 1
-      mediaElement.style.fontSize = undefined
-      mediaElement.style.width = widthOnDom + "px";
-      mediaElement.style.height = heightOnDom + "px";
+      let { x, y, width: widthOnDom, height: heightOnDom } = mediaElement.getClientRects()[0]
 
-      let mediaElementScaledWidth = (mediaElement.style.width.replace('px', '') / state.currentScale);
-      let mediaElementScaledHeight = (mediaElement.style.height.replace('px', '') / state.currentScale);
-      loadedState.x = centerWin.centerX - mediaElementScaledWidth / 2
-      loadedState.y = centerWin.centerY - mediaElementScaledHeight / 2
+      document.body.removeChild(mediaElement)
+      const windowWidth = window.innerWidth
+
+      const fontScaleFactor = windowWidth / widthOnDom
+      newWidth = windowWidth / state.currentScale
+      newHeight = (heightOnDom * (windowWidth / widthOnDom)) / state.currentScale
+
+      mediaElement.style.opacity = 1
+      mediaElement.style.fontSize = fontScaleFactor + "ch"
+      mediaElement.style.width = newWidth + "px";
+      mediaElement.style.height = newHeight + "px";
+      */
+      
+      const { width: newWidth, height: newHeight } = adjustFontSize2(mediaElement, path)
+      loadedState.x = centerWin.centerX - (newWidth / state.currentScale / 2)
+      loadedState.y = centerWin.centerY - (newHeight / state.currentScale / 2)
+
+      loadedState.width = newWidth
+      loadedState.height = newHeight
     } else {
+      //debugger;
+      const { width: newWidth, height: newHeight } = adjustFontSize2(mediaElement, path, loadedState.width)
+      oldRatio = loadedState.width / loadedState.height
+      console.log("oldRatio", oldRatio, "newRatio", newWidth / newHeight)
       mediaElement.style.width = loadedState.width + "px";
-      mediaElement.style.height = loadedState.height + "px";
+      mediaElement.style.height = newHeight + "px";
+      loadedState.width = newWidth
+      loadedState.height = newHeight
     }
+    mediaElement.width = loadedState.width
+    mediaElement.height = loadedState.height
 
   } else {
     alert('unsupported media type')
@@ -486,16 +505,47 @@ function addMediaWithPath(path, type = 'img', loadedState) {
 
   itemHolder.appendChild(mediaElement)
 
-  setTransformForElement(zIndex)
+  //debugger;
   if (type == 'text') {
-    adjustFontSize(mediaElement)
-  }
+    //setTransformForElement(zIndex, 0, 0, loadedState.width, loadedState.height)
+    console.log("loadedState", loadedState, mediaElement)
+    setTransformForElement(zIndex)
+
+    //adjustFontSize2(mediaElement, path, loadedState.width)
+  } else
+    setTransformForElement(zIndex)
 }
-function adjustFontSize(element) {
-  const fontSize = (element.offsetWidth / 3) / state.currentScale;
-  element.style.fontSize = `${fontSize}px`;
-  console.log(element.offsetWidth, fontSize)
+function adjustFontSize2(mediaElement, text, maxWidth = window.innerWidth) {
+  temp = document.createElement('div')
+  temp.style.fontSize = '1ch' // 1ch is the width of the 0 character
+  temp.style.position = 'absolute'
+  temp.style.opacity = 0
+  temp.style.color = "white"
+  temp.style.whiteSpace = "nowrap"
+  temp.innerText = text
+  document.getElementById('hiddenTextTester').appendChild(temp)
+  let { x, y, width: widthOnDom, height: heightOnDom } = temp.getClientRects()[0]
+
+  newRatio = widthOnDom / heightOnDom
+  console.log("widthOnDom", widthOnDom, "HeightOnDom", heightOnDom, temp.clientWidth, temp.clientHeight, newRatio)
+  document.getElementById('hiddenTextTester').removeChild(temp)
+  const windowWidth = maxWidth
+
+  const fontScaleFactor = (maxWidth / widthOnDom) //* state.currentScale
+  //const fontScaleFactorScaled = fontScaleFactor / state.currentScale
+  newWidth = maxWidth
+  //newWidthScaled = newWidth / state.currentScale
+  newHeight = (heightOnDom * fontScaleFactor)
+  //newHeightScaled = newHeight / state.currentScale
+  console.log("Adjustfont2", fontScaleFactor, state.currentScale)
+  mediaElement.style.opacity = 1
+  mediaElement.style.fontSize = fontScaleFactor * state.currentScale + "ch"
+  mediaElement.style.width = newWidth + "px";
+  mediaElement.style.height = newHeight + "px";
+
+  return { width: newWidth, height: newHeight }
 }
+
 document.addEventListener('drop', (event) => {
   event.preventDefault();
   event.stopPropagation();
@@ -641,7 +691,7 @@ interact('.selectedItem').resizable({
       console.log('resize')
 
       if (target.classList.contains('textElement')) {
-        adjustFontSize(target)
+        adjustFontSize2(target, target.innerText, event.rect.width)
       }
       setTransformForElement(target.dataset.zIndex, event.deltaRect.left, event.deltaRect.top, event.rect.width, event.rect.height)
       forceRedraw()
@@ -774,6 +824,9 @@ function forceRedraw() {
 
 
 window.addEventListener('load', (event) => {
-  console.log('page is fully loaded');
-  ipcRenderer.send('ready')
+  setTimeout(function () {
+    console.log('page is fully loaded');
+    ipcRenderer.send('ready')
+  }, 2000);
+
 });

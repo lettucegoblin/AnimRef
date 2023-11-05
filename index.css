@@ -78,7 +78,16 @@ p {
     rgb(255, 255, 255) -1px 1px 0px, rgb(255, 255, 255) 1px 1px 0px;
   text-align: center;
   display:block;
-  
+  white-space: nowrap;
+
+}
+.hiddenTextTester{
+  opacity: 0;
+  position: absolute;
+  font-size: 1ch;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none;
 }
 .iframeDiv {
   min-height: 0;

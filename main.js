@@ -42,6 +42,15 @@ const contextMenu = new Menu()
 const recentSubmenu = new Menu()
 app.whenReady().then(() => {
   const mainWin = createWindow()
+  mainWin.on('ready-to-show', () => {
+    console.log('Window ready to be presented');
+    mainWin.show();
+  });
+  mainWin.webContents.on('did-finish-load', () => {
+    console.log('Page fully loaded');
+    //setTimeout(loadMostRecent, 1000)
+    loadMostRecent()
+  });
 
   contextMenu.append(new MenuItem({
     id: "close-edit-video", label: 'Close Edit Video', visible: false,
@@ -225,7 +234,7 @@ app.whenReady().then(() => {
 
   if (process.argv.indexOf("debug") > -1)
     mainWin.webContents.openDevTools()
-
+  
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow()
@@ -239,7 +248,8 @@ app.whenReady().then(() => {
     })
   })
   ipcMain.on('ready', (event, menuType) => {
-    loadMostRecent()
+    //loadMostRecent()
+    windowIsReady = true;
   });
   ipcMain.on('show-context-menu', (event, menuType) => {
     const win = BrowserWindow.fromWebContents(event.sender)
@@ -286,8 +296,21 @@ app.whenReady().then(() => {
     //win.setSize(width, height)
     //mainWin.setPosition(Math.round(x / 1.25) - Math.round(initPos.x / 1.25), Math.round(y / 1.25) - Math.round(initPos.y / 1.25))
   })
+  let loopToLoad = function loopToLoad(){
+    if(windowIsReady){
+      console.log("loadMostRecent")
+      //setTimeout(loadMostRecent, 700)
+      //loadMostRecent()
+    }
+    else{
+      console.log("not ready")
+      setTimeout(loopToLoad, 100)
+    }
+  };
+  loopToLoad();
 })
 
+let windowIsReady = false;
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
