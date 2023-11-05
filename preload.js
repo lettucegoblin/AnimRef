@@ -260,10 +260,13 @@ document.addEventListener('mousemove', (e) => {
     handleZoom(e.movementX, mouseObj.initPos.x, mouseObj.initPos.y)
     e.preventDefault()
   } else if (e.buttons == 1 && mouseObj.space) {
+    e.preventDefault()
     handleMove(e.movementX, e.movementY)
   } else if (e.buttons == 4) { // middle mouse drag = move
+    e.preventDefault()
     handleMove(e.movementX, e.movementY)
   } else if (e.buttons == 2) {
+    e.preventDefault()
     ipcRenderer.send('move-electron-window', e.screenX, e.screenY, mouseObj.initPos)
     mouseObj.dragging = true;
 
