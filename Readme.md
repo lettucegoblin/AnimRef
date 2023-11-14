@@ -8,5 +8,4 @@ This is a remake/clone of pureRef, a program that allows you to view images on t
 
 # How to use
 Download from releases here: [Releases](https://github.com/lettucegoblin/pureref-gif-support/releases)
-If there's demand for linux/mac builds just post an issue above.
-
+Windows, Mac, and linux support(need testing on mac and linux; If you're on these platforms please mention how they are in the issues)
