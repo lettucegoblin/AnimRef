@@ -18,6 +18,7 @@
     "@electron-forge/maker-squirrel": "^7.4.0",
     "@electron-forge/maker-zip": "^7.4.0",
     "@electron-forge/maker-flatpak": "^7.4.0",
+    "@electron-forge/maker-dmg": "^7.4.0",
     "electron": "30.0.1",
     "@electron/rebuild": "^3.6.0"
   },
