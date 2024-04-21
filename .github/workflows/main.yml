@@ -5,61 +5,72 @@ jobs:
   build-mac:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '19'
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-    - name: Install dependencies
-      run: |
-        npm i
-        npm i appdmg
-    - name: Package
-      run: npm run make
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: purerefAnimated-mac
-        path: |
-          out/make/**/*.zip
-          out/make/**/*.dmg
+      - uses: actions/checkout@v2
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '19'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: |
+          npm i
+          npm i appdmg
+      - name: Package
+        run: npm run make
+      - name: Upload ZIP Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: purerefAnimated-mac-zip
+          path: out/make/**/*.zip
+      - name: Upload DMG Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: purerefAnimated-mac-dmg
+          path: out/make/**/*.dmg
+
   build-linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      
       - name: Use Node.js
         uses: actions/setup-node@v2
         with:
           node-version: '19'
           cache: 'npm'
-
       - name: Install dependencies
         run: npm ci
-      
       - name: Install Flatpak dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y flatpak flatpak-builder elfutils dpkg rpm
           flatpak --user remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
           git config --global protocol.file.allow always
-
       - name: Package for Linux
         run: npm run make
-
-      - name: Upload Linux Artifacts
+      - name: Upload ZIP Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: purerefAnimated-linux
-          path: |
-            out/make/**/*.zip
-            out/make/**/*.deb
-            out/make/**/*.rpm
-            out/make/**/*.flatpak
+          name: purerefAnimated-linux-zip
+          path: out/make/**/*.zip
+      - name: Upload DEB Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: purerefAnimated-linux-deb
+          path: out/make/**/*.deb
+      - name: Upload RPM Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: purerefAnimated-linux-rpm
+          path: out/make/**/*.rpm
+      - name: Upload Flatpak Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: purerefAnimated-linux-flatpak
+          path: out/make/**/*.flatpak
+
   build-win:
     runs-on: windows-latest
     steps:
@@ -72,10 +83,13 @@ jobs:
         run: npm i
       - name: Package
         run: npm run make
-      - name: Upload Artifacts
+      - name: Upload ZIP Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: purerefAnimated-win
-          path: |
-            out/make/**/*.zip
-            out/make/**/*.exe
+          name: purerefAnimated-win-zip
+          path: out/make/**/*.zip
+      - name: Upload EXE Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: purerefAnimated-win-exe
+          path: out/make/**/*.exe
