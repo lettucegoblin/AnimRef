@@ -10,6 +10,10 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: '19'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
     - name: Install dependencies
       run: |
         npm i
