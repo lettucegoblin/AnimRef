@@ -1,6 +1,6 @@
 {
   "name": "purerefAnimated",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Pureref clone that has support for gifs/videos.",
   "main": "main.js",
   "scripts": {
@@ -70,6 +70,10 @@
         },
         {
           "name": "@electron-forge/maker-rpm",
+          "config": {}
+        },
+        {
+          "name": "@electron-forge/maker-dmg",
           "config": {}
         }
       ]

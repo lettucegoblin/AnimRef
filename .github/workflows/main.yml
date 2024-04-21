@@ -50,7 +50,10 @@ jobs:
         with:
           name: purerefAnimated-linux
           path: |
-            out/make/**/*.(deb|rpm|flatpak)
+            out/make/**/*.zip
+            out/make/**/*.deb
+            out/make/**/*.rpm
+            out/make/**/*.flatpak
   build-win:
     runs-on: windows-latest
     steps:
