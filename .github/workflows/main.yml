@@ -36,7 +36,7 @@ jobs:
         run: npm ci
       
       - name: Install Flatpak dependencies
-        run: sudo apt-get install -y flatpak-builder elfutils
+        run: sudo apt-get install -y flatpak flatpak-builder elfutils
 
       - name: Package for Linux
         run: npm run make
