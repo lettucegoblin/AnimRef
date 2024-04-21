@@ -17,6 +17,7 @@
     "@electron-forge/maker-rpm": "^6.0.0-beta.54",
     "@electron-forge/maker-squirrel": "^6.0.0-beta.54",
     "@electron-forge/maker-zip": "^6.0.0-beta.54",
+    "@electron-forge/maker-flatpak": "^6.0.0-beta.54",
     "electron": "^27.0.3",
     "electron-rebuild": "^3.2.9"
   },
@@ -39,7 +40,8 @@
         ],
         "linux": [
           "deb",
-          "rpm"
+          "rpm",
+          "flatpak"
         ]
       },
       "makers": [
@@ -51,6 +53,18 @@
         },
         {
           "name": "@electron-forge/maker-zip"
+        },
+        {
+          "name": "@electron-forge/maker-flatpak", 
+          "config": {}
+        },
+        {
+          "name": "@electron-forge/maker-deb",
+          "config": {}
+        },
+        {
+          "name": "@electron-forge/maker-rpm",
+          "config": {}
         }
       ]
     }
