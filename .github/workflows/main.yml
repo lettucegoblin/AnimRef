@@ -17,7 +17,7 @@ jobs:
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2
       with:
-        name: purerefAnimated
+        name: purerefAnimated-mac
         path: |
           out/make/**/*.zip
           out/make/**/*.dmg
@@ -34,6 +34,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+      
+      - name: Install Flatpak dependencies
+        run: sudo apt-get install -y flatpak-builder elfutils
 
       - name: Package for Linux
         run: npm run make
@@ -44,7 +47,7 @@ jobs:
           name: purerefAnimated-linux
           path: |
             out/make/**/*.(deb|rpm|flatpak)
-  build-win-linux:
+  build-win:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v2
@@ -59,7 +62,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: purerefAnimated
+          name: purerefAnimated-win
           path: |
             out/make/**/*.zip
             out/make/**/*.exe
