@@ -9,3 +9,16 @@ This is a remake/clone of pureRef, a program that allows you to view images on t
 # How to use
 Download from releases here: [Releases](https://github.com/lettucegoblin/pureref-gif-support/releases)
 Windows, Mac, and linux support(need testing on mac and linux; If you're on these platforms please mention how they are in the issues)
+
+# Contributing
+I've added a bunch of [issues](https://github.com/lettucegoblin/pureref-gif-support/issues) that are good starters. 
+If you want to contribute i recommend [this guide](https://www.dataschool.io/how-to-contribute-on-github/) if you're unfamiliar with the process. Feel free to contribute however you'd like!
+
+## Building guide
+- if you're looking to contribute prob fork the repo and then clone that locally. use guide above if unfamiliar.
+- Install nodejs(I use node version 19)
+- in the local repo run `npm install`
+- Running: `npm run start`
+- Packaging: `npm run package` this makes a simple runnable non-installer(.exe for Windows, .dmg for macOS, or .deb for Linux) in out/purerefAnimated...
+- Make: `npm run make` this makes an installer in out/make
+- For debugging you can press Control+Shift+I to open the dev console.
