@@ -10,6 +10,15 @@ This is a remake/clone of pureRef, a program that allows you to view images on t
 Download from releases here: [Releases](https://github.com/lettucegoblin/pureref-gif-support/releases)
 Windows, Mac, and linux support(need testing on mac and linux; If you're on these platforms please mention how they are in the issues)
 
+## Shortcuts
+   - Load - Ctrl+L
+   - Save - Ctrl+S
+   - New Scene - Ctrl+N
+   - Close - Ctrl+W
+   - Maximize - Ctrl+F
+   - Minimize - Ctrl+M
+## Want to add/suggest more shortcuts?
+Use the contribution guide below and check out the issue here: https://github.com/lettucegoblin/pureref-gif-support/issues/9
 # Contributing
 I've added a bunch of [issues](https://github.com/lettucegoblin/pureref-gif-support/issues) that are good starters. 
 If you want to contribute i recommend [this guide](https://www.dataschool.io/how-to-contribute-on-github/) if you're unfamiliar with the process. Feel free to contribute however you'd like!
