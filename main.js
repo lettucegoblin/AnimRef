@@ -40,6 +40,7 @@ function createWindow() {
 app.commandLine.appendSwitch('disable-site-isolation-trials');
 const contextMenu = new Menu()
 const recentSubmenu = new Menu()
+const windowSubmenu = new Menu()
 app.whenReady().then(() => {
   const mainWin = createWindow()
   mainWin.on('ready-to-show', () => {
@@ -176,10 +177,37 @@ app.whenReady().then(() => {
   contextMenu.append(new MenuItem({
     label: "Recent", type: 'submenu',
     submenu: recentSubmenu
-  }))
+  }));
   populateRecent()
   contextMenu.append(new MenuItem({
+    label: "Window", type: 'submenu',
+    submenu: windowSubmenu
+  }));
+  windowSubmenu.append(new MenuItem({
+    label: "Maximize",
+    accelerator: process.platform === 'darwin' ? 'Cmd+F' : 'Ctrl+F',
+    ///TODO: add fuctionality maximizing a window
+    click: (menuItem, browserWindow, event) => {
+      console.log("max window");
+      if(!browserWindow.isMaximized())
+        browserWindow.maximize();
+      else
+        browserWindow.unmaximize();
+    }
+  }));
+  windowSubmenu.append(new MenuItem({
+    label: "Minimize",
+    accelerator: process.platform === 'darwin' ? 'Cmd+M' : 'Ctrl+M',
+    ///TODO: add fuctionality for minimizing a window
+    click: (menuItem, browserWindow, event) => {
+      console.log("max window");
+      if(!browserWindow.minimize())
+        browserWindow.minimize();
+    }
+  }));
+  contextMenu.append(new MenuItem({
     label: 'Load',
+    accelerator: process.platform === 'darwin' ? 'Cmd+L' : 'Ctrl+L',
     click: (menuItem, browserWindow, event) => {
       dialog.showOpenDialog({
         properties: ['openFile'],
@@ -199,6 +227,7 @@ app.whenReady().then(() => {
   }));
   contextMenu.append(new MenuItem({
     label: 'Save',
+    accelerator: process.platform === 'darwin' ? 'Cmd+S' : 'Ctrl+S',
     click: (menuItem, browserWindow, event) => {
       dialog.showSaveDialog({
         defaultPath: 'scene.purgif',
@@ -219,14 +248,16 @@ app.whenReady().then(() => {
   }));
   contextMenu.append(new MenuItem({
     label: 'New Scene',
+    accelerator: process.platform === 'darwin' ? 'Cmd+N' : 'Ctrl+N',
     click: (menuItem, browserWindow, event) => {
-      mainWin.webContents.send('new-scene')
+      mainWin.webContents.send('new-scene');
     }
   }));
   contextMenu.append(new MenuItem({
     label: 'Close',
+    accelerator: process.platform === 'darwin' ? 'Cmd+W' : 'Ctrl+W',
     click: (menuItem, browserWindow, event) => {
-      browserWindow.close()
+      browserWindow.close();
     }
   }));
 
