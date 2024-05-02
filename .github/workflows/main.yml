@@ -29,8 +29,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: purerefAnimated-mac-zip
-        path: out/make/**/purerefAnimated-darwin-x64-*.zip
-    
+        path: out/make/**/purerefAnimated-darwin-arm64-*.zip
   build-linux:
     runs-on: ubuntu-latest
     steps:
@@ -71,8 +70,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: purerefAnimated-deb
-          path: out/make/**/purerefanimated_*.deb
-      
+          path: out/make/**/purerefanimated_*.deb   
   build-win:
     runs-on: windows-latest
     steps:
@@ -89,10 +87,91 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: purerefAnimated-exe
-          path: out/make/**/purerefAnimated-*.Setup.exe
+          path: out/make/**/purerefAnimated-*Setup.exe
       - name: Upload ZIP (Windows)
         uses: actions/upload-artifact@v2
         with:
           name: purerefAnimated-win-zip
           path: out/make/**/purerefAnimated-win32-x64-*.zip
-      
+  create-release:
+    needs: [build-mac, build-linux, build-win]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: true
+        prerelease: false
+    - name: Upload DMG to Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: out/make/**/purerefAnimated-*.dmg
+        asset_name: purerefAnimated-*.dmg
+        asset_content_type: application/octet-stream
+    - name: Upload macOS ZIP to Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: out/make/**/purerefAnimated-darwin-x64-*.zip
+        asset_name: purerefAnimated-darwin-arm64-*.zip
+        asset_content_type: application/zip
+  
+    - name: Upload RPM to Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: out/make/**/purerefAnimated-*.rpm
+        asset_name: purerefAnimated-*.rpm
+        asset_content_type: application/x-rpm
+  
+    - name: Upload DEB to Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: out/make/**/purerefanimated_*.deb
+        asset_name: purerefanimated_*.deb
+        asset_content_type: application/vnd.debian.binary-package
+  
+    - name: Upload Flatpak to Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: out/make/**/io.atom.electron.purerefAnimated_stable_x86_64.flatpak
+        asset_name: io.atom.electron.purerefAnimated_stable_x86_64.flatpak
+        asset_content_type: application/octet-stream
+  
+    - name: Upload Windows EXE to Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: out/make/**/purerefAnimated-*Setup.exe
+        asset_name: purerefAnimated-*.Setup.exe
+        asset_content_type: application/octet-stream
+  
+    - name: Upload Windows ZIP to Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: out/make/**/purerefAnimated-win32-x64-*.zip
+        asset_name: purerefAnimated-win32-x64-*.zip
+        asset_content_type: application/zip
