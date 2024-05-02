@@ -20,13 +20,17 @@ jobs:
         npm i appdmg
     - name: Package
       run: npm run make
-    - name: Upload Artifacts
+    - name: Upload DMG
       uses: actions/upload-artifact@v2
       with:
-        name: purerefAnimated-mac
-        path: |
-          out/make/**/*.zip
-          out/make/**/*.dmg
+        name: purerefAnimated-dmg
+        path: out/make/**/purerefAnimated-*.dmg
+    - name: Upload ZIP (macOS)
+      uses: actions/upload-artifact@v2
+      with:
+        name: purerefAnimated-mac-zip
+        path: out/make/**/purerefAnimated-darwin-x64-*.zip
+    
   build-linux:
     runs-on: ubuntu-latest
     steps:
@@ -51,15 +55,24 @@ jobs:
       - name: Package for Linux
         run: npm run make
 
-      - name: Upload Linux Artifacts
+      - name: Upload Flatpak
         uses: actions/upload-artifact@v2
         with:
-          name: purerefAnimated-linux
-          path: |
-            out/make/**/*.zip
-            out/make/**/*.deb
-            out/make/**/*.rpm
-            out/make/**/*.flatpak
+          name: purerefAnimated-flatpak
+          path: out/make/**/io.atom.electron.purerefAnimated_stable_x86_64.flatpak
+      
+      - name: Upload RPM
+        uses: actions/upload-artifact@v2
+        with:
+          name: purerefAnimated-rpm
+          path: out/make/**/purerefAnimated-*.rpm
+      
+      - name: Upload DEB
+        uses: actions/upload-artifact@v2
+        with:
+          name: purerefAnimated-deb
+          path: out/make/**/purerefanimated_*.deb
+      
   build-win:
     runs-on: windows-latest
     steps:
@@ -72,10 +85,14 @@ jobs:
         run: npm i
       - name: Package
         run: npm run make
-      - name: Upload Artifacts
+      - name: Upload EXE
         uses: actions/upload-artifact@v2
         with:
-          name: purerefAnimated-win
-          path: |
-            out/make/**/*.zip
-            out/make/**/*.exe
+          name: purerefAnimated-exe
+          path: out/make/**/purerefAnimated-*.Setup.exe
+      - name: Upload ZIP (Windows)
+        uses: actions/upload-artifact@v2
+        with:
+          name: purerefAnimated-win-zip
+          path: out/make/**/purerefAnimated-win32-x64-*.zip
+      
