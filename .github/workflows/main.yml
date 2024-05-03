@@ -132,62 +132,94 @@ jobs:
         asset_path: ${{ env.DMG_PATH }}
         asset_name: purerefAnimated-arm64.dmg
         asset_content_type: application/octet-stream
+
+    - name: Find Mac ZIP File
+      id: find_zip
+      run: |
+        MAC_ZIP_PATH=$(find . -name "purerefAnimated-darwin-arm64-*.zip" -print -quit)
+        echo "MAC_ZIP_PATH=$MAC_ZIP_PATH" >> $GITHUB_ENV
     - name: Upload macOS ZIP to Release
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./**/purerefAnimated-darwin-arm64*.zip
+        asset_path: ${{ env.MAC_ZIP_PATH }}
         asset_name: purerefAnimated-darwin-arm64-*.zip
         asset_content_type: application/zip
 
+    - name: Find RPM File
+      id: find_rpm
+      run: |
+        RPM_PATH=$(find . -name "purerefAnimated-*.rpm" -print -quit)
+        echo "RPM_PATH=$RPM_PATH" >> $GITHUB_ENV
     - name: Upload RPM to Release
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./**/purerefAnimated*.rpm
+        asset_path: ${{ env.RPM_PATH }}
         asset_name: purerefAnimated-*.rpm
         asset_content_type: application/x-rpm
 
+    - name: Find DEB File
+      id: find_deb
+      run: |
+        DEB_PATH=$(find . -name "purerefanimated_*.deb" -print -quit)
+        echo "DEB_PATH=$DEB_PATH" >> $GITHUB_ENV
     - name: Upload DEB to Release
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./**/purerefanimated*.deb
+        asset_path: ${{ env.DEB_PATH }}
         asset_name: purerefanimated_*.deb
         asset_content_type: application/vnd.debian.binary-package
 
+    - name: Find Flatpak File
+      id: find_flatpak
+      run: |
+        FLATPAK_PATH=$(find . -name "io.atom.electron.purerefAnimated_stable_x86_64.flatpak" -print -quit)
+        echo "FLATPAK_PATH=$FLATPAK_PATH" >> $GITHUB_ENV
     - name: Upload Flatpak to Release
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./**/io.atom.electron.purerefAnimated_stable_x86_64.flatpak
+        asset_path: ${{ env.FLATPAK_PATH }}
         asset_name: io.atom.electron.purerefAnimated_stable_x86_64.flatpak
         asset_content_type: application/octet-stream
 
+    - name: Find Windows EXE File
+      id: find_exe
+      run: |
+        EXE_PATH=$(find . -name "purerefAnimated-*Setup.exe" -print -quit)
+        echo "EXE_PATH=$EXE_PATH" >> $GITHUB_ENV
     - name: Upload Windows EXE to Release
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./**/purerefAnimated*Setup.exe
+        asset_path: ${{ env.EXE_PATH }}
         asset_name: purerefAnimated-* Setup.exe
         asset_content_type: application/octet-stream
 
+
+    - name: Find Windows ZIP File
+      id: find_win_zip
+      run: |
+        WIN_ZIP_PATH=$(find . -name "purerefAnimated-win32-x64-*.zip" -print -quit)
+        echo "WIN_ZIP_PATH=$WIN_ZIP_PATH" >> $GITHUB_ENV
     - name: Upload Windows ZIP to Release
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./**/purerefAnimated-win32-x64-*.zip
+        asset_path: ${{ env.WIN_ZIP_PATH }}
         asset_name: purerefAnimated-win32-x64-*.zip
         asset_content_type: application/zip
