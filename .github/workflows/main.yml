@@ -113,6 +113,10 @@ jobs:
         release_name: Release ${{ github.ref }}
         draft: true
         prerelease: false
+    - name: List directory structure
+      run: |
+        sudo apt-get install -y tree
+        tree .
      
     - name: Upload DMG to Release
       uses: actions/upload-release-asset@v1
@@ -120,7 +124,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: extracted/**/purerefAnimated*.dmg
+        asset_path: ./**/purerefAnimated*.dmg
         asset_name: purerefAnimated-*.dmg
         asset_content_type: application/octet-stream
     - name: Upload macOS ZIP to Release
@@ -129,7 +133,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: extracted/**/purerefAnimated-darwin-arm64*.zip
+        asset_path: ./**/purerefAnimated-darwin-arm64*.zip
         asset_name: purerefAnimated-darwin-arm64-*.zip
         asset_content_type: application/zip
 
@@ -139,7 +143,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: extracted/**/purerefAnimated*.rpm
+        asset_path: ./**/purerefAnimated*.rpm
         asset_name: purerefAnimated-*.rpm
         asset_content_type: application/x-rpm
 
@@ -149,7 +153,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: extracted/**/purerefanimated*.deb
+        asset_path: ./**/purerefanimated*.deb
         asset_name: purerefanimated_*.deb
         asset_content_type: application/vnd.debian.binary-package
 
@@ -159,7 +163,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: extracted/**/io.atom.electron.purerefAnimated_stable_x86_64.flatpak
+        asset_path: ./**/io.atom.electron.purerefAnimated_stable_x86_64.flatpak
         asset_name: io.atom.electron.purerefAnimated_stable_x86_64.flatpak
         asset_content_type: application/octet-stream
 
@@ -169,7 +173,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: extracted/**/purerefAnimated*Setup.exe
+        asset_path: ./**/purerefAnimated*Setup.exe
         asset_name: purerefAnimated-* Setup.exe
         asset_content_type: application/octet-stream
 
@@ -179,6 +183,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: extracted/**/purerefAnimated-win32-x64-*.zip
+        asset_path: ./**/purerefAnimated-win32-x64-*.zip
         asset_name: purerefAnimated-win32-x64-*.zip
         asset_content_type: application/zip
