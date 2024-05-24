@@ -99,6 +99,12 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+
+    - name: Extract version
+      id: get_version
+      run: |
+        VERSION=$(jq -r '.version' package.json)
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
    
     - name: Download Artifacts
       uses: actions/download-artifact@v2
@@ -110,19 +116,18 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
+        release_name: AnimRef v${{ env.VERSION }}
         draft: true
         prerelease: false
     - name: List directory structure
       run: |
         sudo apt-get install -y tree
         tree .
-    - name: Find DMG File
-      id: find_dmg
-      run: |
-        DMG_PATH=$(find . -name "animref*.dmg" -print -quit)
-        echo "DMG_PATH=$DMG_PATH" >> $GITHUB_ENV
-     
+        - name: Find DMG File
+        id: find_dmg
+        run: |
+          DMG_PATH=$(find . -name "animref*.dmg" -print -quit)
+          echo "DMG_PATH=$DMG_PATH" >> $GITHUB_ENV
     - name: Upload DMG to Release
       uses: actions/upload-release-asset@v1
       env:
@@ -130,7 +135,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ${{ env.DMG_PATH }}
-        asset_name: animref-arm64.dmg
+        asset_name: animref-arm64-${{ env.VERSION }}.dmg
         asset_content_type: application/octet-stream
 
     - name: Find Mac ZIP File
@@ -145,7 +150,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ${{ env.MAC_ZIP_PATH }}
-        asset_name: animref-darwin-arm64-*.zip
+        asset_name: animref-darwin-arm64-${{ env.VERSION }}.zip
         asset_content_type: application/zip
 
     - name: Find RPM File
@@ -160,7 +165,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ${{ env.RPM_PATH }}
-        asset_name: animref-*.rpm
+        asset_name: animref-${{ env.VERSION }}.rpm
         asset_content_type: application/x-rpm
 
     - name: Find DEB File
@@ -175,7 +180,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ${{ env.DEB_PATH }}
-        asset_name: animref_*.deb
+        asset_name: animref_${{ env.VERSION }}.deb
         asset_content_type: application/vnd.debian.binary-package
 
     - name: Find Flatpak File
@@ -190,7 +195,7 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ${{ env.FLATPAK_PATH }}
-        asset_name: io.atom.electron.animref_stable_x86_64.flatpak
+        asset_name: io.atom.electron.animref_stable_x86_64-${{ env.VERSION }}.flatpak
         asset_content_type: application/octet-stream
 
     - name: Find Windows EXE File
@@ -205,9 +210,8 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ${{ env.EXE_PATH }}
-        asset_name: animref-* Setup.exe
+        asset_name: animref-${{ env.VERSION }}-Setup.exe
         asset_content_type: application/octet-stream
-
 
     - name: Find Windows ZIP File
       id: find_win_zip
@@ -221,5 +225,5 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ${{ env.WIN_ZIP_PATH }}
-        asset_name: animref-win32-x64-*.zip
+        asset_name: animref-win32-x64-${{ env.VERSION }}.zip
         asset_content_type: application/zip
